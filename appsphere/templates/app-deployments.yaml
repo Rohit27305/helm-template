@@ -1,0 +1,61 @@
+{{- range .Values.apps }}
+{{- if .deployment }}
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ .name }}
+  namespace: {{ .namespace | default $.Values.global.namespace }}
+  labels:
+    {{- include "appshpere.labels" $ | nindent 4 }}
+    app: {{ .deployment.app }}
+spec:
+  replicas: {{ .deployment.replicas }}
+  selector:
+    matchLabels:
+      app: {{ .deployment.app }}
+  template:
+    metadata:
+      labels:
+        app: {{ .deployment.app }}
+        app.kubernetes.io/name: {{ .name }}-pod
+    spec:
+      serviceAccountName: {{ $.Values.rbac.serviceAccountName }}
+      containers:
+        - name: {{ .name }}
+          image: "{{ $.Values.global.image.registry }}/{{ $.Values.global.image.repository }}/{{ .imageName }}:{{ .tag }}"
+          imagePullPolicy: {{ $.Values.global.image.pullPolicy }}
+          {{- if .command }}
+          command: [{{- range $index, $elem := .command }}{{ if $index }}, {{ end }}"{{ $elem }}"{{- end }}]
+          {{- end }}
+          ports:
+            - containerPort: {{ .ports.targetPort | default .ports.port }}
+              name: http-port
+              protocol: TCP
+            {{- if .ports.grpcPort }}
+            - containerPort: {{ .ports.grpcPort }}
+              name: grpc-port
+              protocol: TCP
+            {{- end }}
+          {{- if .env }}
+          env:
+            {{- toYaml .env | nindent 12 }}
+          {{- end }}
+          {{- if .envFrom }}
+          envFrom:
+            - secretRef:
+                name: {{ .envFrom }}
+          {{- end }}
+          {{- if .resources.enabled }}
+          resources:
+            {{- if .resources.requests }}
+            {{- toYaml .resources.requests | nindent 12 }}
+            {{- end }}
+            {{- if .resources.limits }}
+            {{- toYaml .resources.limits | nindent 12 }}
+            {{- end }}
+          {{- end }}
+      imagePullSecrets:
+        {{- toYaml $.Values.global.imagePullSecrets | nindent 8 }}
+{{- end }}
+{{- end }}

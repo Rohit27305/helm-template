@@ -1,0 +1,341 @@
+global:
+  namespace: console-prod
+  image:
+    registry: registry.digitalocean.com
+    repository: consoleprod
+    pullPolicy: Always
+  imagePullSecrets:
+    - name: container-secrets
+
+apps:
+
+  - name: babbler-service
+    namespace: console-prod
+    ports:
+      port: 8002
+      targetPort: 8002
+    app: babbler-service
+    imageName: babbler-service
+    tag: prodlatest
+    resources:
+      enabled: true
+      requests:
+        memory: "500Mi"
+        cpu: "250m"
+      limits:
+        memory: "1Gi"
+        cpu: "500m"
+    envFrom: babbler-env-vars
+    env: []
+    command: []
+    service:
+      type: NodePort
+    hpa:
+      enabled: true
+      minReplicas: 1
+      maxReplicas: 3
+      targetCPUUtilizationPercentage: 80
+
+  - name: babbler-ui
+    namespace: console-prod
+    ports:
+      port: 3000
+      targetPort: 3000
+    app: babbler-ui
+    imageName: babbler-ui
+    tag: prodlatest
+    resources:
+      enabled: true
+      requests:
+        memory: "500Mi"
+        cpu: "250m"
+      limits:
+        memory: "1Gi"
+        cpu: "500m"
+    envFrom: ""
+    env: []
+    command: []
+    service:
+      type: NodePort
+    hpa:
+      enabled: true
+      minReplicas: 1
+      maxReplicas: 3
+      targetCPUUtilizationPercentage: 80
+
+  - name: console-service
+    namespace: console-prod
+    ports:
+      port: 8001
+      targetPort: 8001
+      grpcPort: 50051
+    app: console-service
+    imageName: console-service
+    tag: prodlatest
+    resources:
+      requests:
+        memory: "500Mi"
+        cpu: "250m"
+      limits:
+        memory: "1Gi"
+        cpu: "500m"
+    envFrom: console-env-vars
+    env: []
+    command: []
+    service:
+      type: LoadBalancer
+    hpa:
+      enabled: true
+      minReplicas: 2
+      maxReplicas: 5
+      targetCPUUtilizationPercentage: 80
+
+  - name: console-ui
+    namespace: console-prod
+    ports:
+      port: 3000
+      targetPort: 3000
+      grpcPort: 50050
+    app: console-ui
+    imageName: console-ui
+    tag: prodlatest
+    resources:
+      requests:
+        memory: "500Mi"
+        cpu: "250m"
+      limits:
+        memory: "1Gi"
+        cpu: "500m"
+    envFrom: ""
+    env: []
+    command: []
+    service:
+      type: NodePort
+    hpa:
+      enabled: true
+      minReplicas: 1
+      maxReplicas: 3
+      targetCPUUtilizationPercentage: 80
+
+  - name: holler-service
+    namespace: console-prod
+    ports:
+      port: 8003
+      targetPort: 8003
+    app: holler-service
+    imageName: holler-service
+    tag: prodlatest
+    resources:
+      requests:
+        memory: "500Mi"
+        cpu: "250m"
+      limits:
+        memory: "1Gi"
+        cpu: "500m"
+    envFrom: holler-env-vars
+    env: []
+    command: []
+    service:
+      type: ClusterIP
+    hpa:
+      enabled: true
+      minReplicas: 1
+      maxReplicas: 3
+      targetCPUUtilizationPercentage: 80
+
+  - name: maglo-service-beat
+    namespace: console-prod
+    ports: []
+    app: maglo-service-beat
+    imageName: maglo-service
+    tag: prodlatest
+    resources:
+      requests:
+        memory: "250Mi"
+        cpu: "100m"
+      limits:
+        memory: "1Gi"
+        cpu: "500m"
+    envFrom: maglo-env-vars
+    env: []
+    command: ["poetry", "run", "celery", "-A", "src.maglo_celery.celery_app.celery", "beat", "--loglevel=debug"]
+    service: null
+    hpa:
+      enabled: false
+
+  - name: maglo-service
+    namespace: console-prod
+    ports:
+      port: 8002
+      targetPort: 8002
+    app: maglo-service
+    imageName: maglo-service
+    tag: prodlatest
+    resources:
+      requests:
+        memory: "500Mi"
+        cpu: "500m"
+      limits:
+        memory: "1000Mi"
+        cpu: "1"
+    envFrom: maglo-env-vars
+    env: []
+    command: []
+    service:
+      type: NodePort
+    hpa:
+      enabled: true
+      minReplicas: 2
+      maxReplicas: 5
+      targetCPUUtilizationPercentage: 80
+
+  - name: maglo-ui
+    namespace: console-prod
+    ports:
+      port: 3000
+      targetPort: 3000
+    app: maglo-ui
+    imageName: maglo-ui
+    tag: prodlatest
+    resources:
+      requests:
+        memory: "1Gi"
+        cpu: "500m"
+      limits:
+        memory: "2Gi"
+        cpu: "1"
+    envFrom: ""
+    env:
+      - name: NODE_ENV
+        value: "production"
+      - name: NEXT_TELEMETRY_DISABLED
+        value: "1"
+      - name: HOSTNAME
+        value: "0.0.0.0"
+    command: []
+    service:
+      type: NodePort
+    hpa:
+      enabled: true
+      minReplicas: 1
+      maxReplicas: 3
+      targetCPUUtilizationPercentage: 80
+
+  - name: maglo-service-worker
+    namespace: console-prod
+    ports: []
+    app: maglo-service-worker
+    imageName: maglo-service
+    tag: prodlatest
+    resources:
+      requests:
+        memory: "250Mi"
+        cpu: "100m"
+      limits:
+        memory: "1Gi"
+        cpu: "500m"
+    envFrom: maglo-env-vars
+    env: []
+    command: ["poetry", "run", "celery", "-A", "src.maglo_celery.celery_app.celery", "worker", "--loglevel=debug", "--concurrency=4"]
+    service: null
+    hpa:
+      enabled: false
+
+ingress:
+  annotations:
+    nginx.ingress.kubernetes.io/proxy-body-size: "50m"
+    nginx.ingress.kubernetes.io/rewrite-target: "/"
+    nginx.ingress.kubernetes.io/ssl-redirect: "true"
+    nginx.ingress.kubernetes.io/proxy-buffer-size: 32k
+    nginx.ingress.kubernetes.io/proxy-buffers-number: "8"
+  rules:
+    - host: console-service.makunaiglobal.ai
+      paths:
+        - path: /
+          pathType: Prefix
+          backend:
+            service: console-service
+            port: 8000
+        - path: /grpc
+          pathType: Prefix
+          backend:
+            service: console-service
+            port: 50051
+    - host: maglo-service.makunaiglobal.ai
+      paths:
+        - path: /
+          pathType: Prefix
+          backend:
+            service: maglo-service
+            port: 8000
+    - host: maglo.makunaiglobal.ai
+      paths:
+        - path: /
+          pathType: Prefix
+          backend:
+            service: maglo-ui
+            port: 3000
+    - host: console.makunaiglobal.ai
+      paths:
+        - path: /
+          pathType: Prefix
+          backend:
+            service: console-ui
+            port: 3000
+    - host: babbler.makunaiglobal.ai
+      paths:
+        - path: /
+          pathType: Prefix
+          backend:
+            service: babbler-ui
+            port: 3000
+    - host: babbler-service.makunaiglobal.ai
+      paths:
+        - path: /
+          pathType: Prefix
+          backend:
+            service: babbler-service
+            port: 8002
+    - host: inboundlead.mbbsabroadexperts.com
+      paths:
+        - path: /
+          pathType: Prefix
+          backend:
+            service: maglo-service
+            port: 8000
+    - host: holler-service.makunaiglobal.ai
+      paths:
+        - path: /
+          pathType: Prefix
+          backend:
+            service: holler-service
+            port: 8003
+  tls:
+    - hosts:
+        - console-service.makunaiglobal.ai
+      secretName: tls-secret
+    - hosts:
+        - maglo-service.makunaiglobal.ai
+      secretName: tls-secret
+    - hosts:
+        - maglo.makunaiglobal.ai
+      secretName: tls-secret
+    - hosts:
+        - console.makunaiglobal.ai
+      secretName: tls-secret
+    - hosts:
+        - babbler.makunaiglobal.ai
+      secretName: tls-secret
+    - hosts:
+        - babbler-service.makunaiglobal.ai
+      secretName: tls-secret
+    - hosts:
+        - holler-service.makunaiglobal.ai
+      secretName: tls-secret
+
+rbac:
+  enabled: true
+  serviceAccountName: appshpere-sa
+  roleName: appshpere-role
+  roleBindingName: appshpere-rolebinding
+  tokenSecretName: appshpere-sa-token

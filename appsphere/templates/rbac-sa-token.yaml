@@ -1,0 +1,13 @@
+{{- if .Values.rbac.enabled }}
+---
+apiVersion: v1
+kind: Secret
+metadata:
+  name: {{ .Values.rbac.tokenSecretName }}
+  namespace: {{ .Values.global.namespace }}
+  labels:
+    {{- include "appshpere.labels" . | nindent 4 }}
+  annotations:
+    kubernetes.io/service-account.name: {{ .Values.rbac.serviceAccountName }}
+type: kubernetes.io/service-account-token
+{{- end }}

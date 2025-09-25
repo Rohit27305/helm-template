@@ -1,0 +1,31 @@
+{{- range .Values.apps }}
+{{- if .service }}
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ .name }}
+  namespace: {{ .namespace | default $.Values.global.namespace }}
+  labels:
+    {{- include "appshpere.labels" $ | nindent 4 }}
+    app: {{ .app }}
+spec:
+  selector:
+    app: {{ .app }}
+  ports:
+    - name: http-port
+      protocol: TCP
+      port: {{ .ports.port }}
+      targetPort: {{ .ports.targetPort | default .ports.port }}
+    {{- if .ports.grpcPort }}
+    - name: grpc-port
+      protocol: TCP
+      port: {{ .ports.grpcPort }}
+      targetPort: {{ .ports.grpcPort }}
+      {{- if .ports.grpcNodePort }}
+      nodePort: {{ .ports.grpcNodePort }}
+      {{- end }}
+    {{- end }}
+  type: {{ .type }}
+{{- end }}
+{{- end }}
