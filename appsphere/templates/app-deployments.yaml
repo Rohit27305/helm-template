@@ -1,5 +1,5 @@
 {{- range .Values.apps }}
-{{- if .deployment }}
+{{- if .app }}
 ---
 apiVersion: apps/v1
 kind: Deployment
@@ -8,16 +8,21 @@ metadata:
   namespace: {{ .namespace | default $.Values.global.namespace }}
   labels:
     {{- include "appshpere.labels" $ | nindent 4 }}
-    app: {{ .deployment.app }}
+    app: {{ .app }}
 spec:
-  replicas: {{ .deployment.replicas }}
+  replicas: {{ .replicas | default 1 }}
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxUnavailable: 0
+      maxSurge: 1
   selector:
     matchLabels:
-      app: {{ .deployment.app }}
+      app: {{ .app }}
   template:
     metadata:
       labels:
-        app: {{ .deployment.app }}
+        app: {{ .app }}
         app.kubernetes.io/name: {{ .name }}-pod
     spec:
       containers:
@@ -55,6 +60,13 @@ spec:
             {{- if .resources.limits }}
             {{- toYaml .resources.limits | nindent 12 }}
             {{- end }}
+          {{- end }}
+          {{- if .startupProbe.enabled }}
+          startupProbe:
+            exec:
+              command: ["true"]
+            initialDelaySeconds: {{ .startupProbe.initialDelaySeconds | default 60 }}
+            periodSeconds: {{ .startupProbe.periodSeconds | default 10 }}
           {{- end }}
       imagePullSecrets:
         {{- toYaml $.Values.global.imagePullSecrets | nindent 8 }}

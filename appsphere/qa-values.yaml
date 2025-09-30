@@ -16,6 +16,11 @@ apps:
       grpcPort: 50051
       grpcNodePort: 31424
     app: console-service
+    replicas: 2
+    startupProbe:
+      enabled: true
+      initialDelaySeconds: 60
+      periodSeconds: 10
     imageName: console-service
     tag: qalatest
     resources:
@@ -29,12 +34,13 @@ apps:
     env: []
     command: []
     service:
-      type: LoadBalancer
+      type: NodePort
     hpa:
-      enabled: true
+      enabled: false
       minReplicas: 2
       maxReplicas: 5
       targetCPUUtilizationPercentage: 80
+      targetMemoryUtilizationPercentage: 80
 
   - name: console-ui
     namespace: maglo-qa
@@ -42,6 +48,11 @@ apps:
       port: 3000
       targetPort: 3000
     app: console-ui
+    replicas: 1
+    startupProbe:
+      enabled: true
+      initialDelaySeconds: 60
+      periodSeconds: 10
     imageName: console-ui
     tag: qalatest
     resources:
@@ -55,12 +66,13 @@ apps:
     env: []
     command: []
     service:
-      type: NodePort
+      type: ClusterIP
     hpa:
-      enabled: true
+      enabled: false
       minReplicas: 1
       maxReplicas: 3
       targetCPUUtilizationPercentage: 80
+      targetMemoryUtilizationPercentage: 80
 
   - name: maglo-service
     namespace: maglo-qa
@@ -68,6 +80,11 @@ apps:
       port: 8002
       targetPort: 8002
     app: maglo-service
+    replicas: 2
+    startupProbe:
+      enabled: true
+      initialDelaySeconds: 60
+      periodSeconds: 10
     imageName: maglo-service
     tag: qalatest
     resources:
@@ -81,17 +98,23 @@ apps:
     env: []
     command: []
     service:
-      type: NodePort
+      type: ClusterIP
     hpa:
-      enabled: true
+      enabled: false
       minReplicas: 2
       maxReplicas: 5
       targetCPUUtilizationPercentage: 80
+      targetMemoryUtilizationPercentage: 80
 
   - name: maglo-service-worker
     namespace: maglo-qa
     ports: []
     app: maglo-service-worker
+    replicas: 1
+    startupProbe:
+      enabled: true
+      initialDelaySeconds: 60
+      periodSeconds: 10
     imageName: maglo-service
     tag: qalatest
     resources:
@@ -112,6 +135,11 @@ apps:
     namespace: maglo-qa
     ports: []
     app: maglo-service-beat
+    replicas: 1
+    startupProbe:
+      enabled: true
+      initialDelaySeconds: 60
+      periodSeconds: 10
     imageName: maglo-service
     tag: qalatest
     resources:
@@ -134,6 +162,11 @@ apps:
       port: 3000
       targetPort: 3000
     app: maglo-ui
+    replicas: 1
+    startupProbe:
+      enabled: true
+      initialDelaySeconds: 60
+      periodSeconds: 10
     imageName: maglo-ui
     tag: qalatest
     resources:
@@ -147,12 +180,13 @@ apps:
     env: []
     command: []
     service:
-      type: NodePort
+      type: ClusterIP
     hpa:
-      enabled: true
+      enabled: false
       minReplicas: 1
       maxReplicas: 3
       targetCPUUtilizationPercentage: 80
+      targetMemoryUtilizationPercentage: 80
 
   - name: babbler-service
     namespace: maglo-qa
@@ -160,6 +194,11 @@ apps:
       port: 8002
       targetPort: 8002
     app: babbler-service
+    replicas: 1
+    startupProbe:
+      enabled: true
+      initialDelaySeconds: 60
+      periodSeconds: 10
     imageName: babbler-service
     tag: qalatest
     resources:
@@ -173,12 +212,13 @@ apps:
     env: []
     command: []
     service:
-      type: NodePort
+      type: ClusterIP
     hpa:
-      enabled: true
+      enabled: false
       minReplicas: 1
       maxReplicas: 3
       targetCPUUtilizationPercentage: 80
+      targetMemoryUtilizationPercentage: 80
 
   - name: babbler-ui
     namespace: maglo-qa
@@ -186,6 +226,11 @@ apps:
       port: 3000
       targetPort: 3000
     app: babbler-ui
+    replicas: 1
+    startupProbe:
+      enabled: true
+      initialDelaySeconds: 60
+      periodSeconds: 10
     imageName: babbler-ui
     tag: qalatest
     resources:
@@ -199,12 +244,13 @@ apps:
     env: []
     command: []
     service:
-      type: NodePort
+      type: ClusterIP
     hpa:
-      enabled: true
+      enabled: false
       minReplicas: 1
       maxReplicas: 3
       targetCPUUtilizationPercentage: 80
+      targetMemoryUtilizationPercentage: 80
 
   - name: holler-service
     namespace: maglo-qa
@@ -212,6 +258,11 @@ apps:
       port: 8003
       targetPort: 8003
     app: holler-service
+    replicas: 1
+    startupProbe:
+      enabled: true
+      initialDelaySeconds: 60
+      periodSeconds: 10
     imageName: holler-service
     tag: qalatest
     resources:
@@ -227,10 +278,11 @@ apps:
     service:
       type: ClusterIP
     hpa:
-      enabled: true
+      enabled: false
       minReplicas: 1
       maxReplicas: 3
       targetCPUUtilizationPercentage: 80
+      targetMemoryUtilizationPercentage: 80
 
 ingress:
   annotations:

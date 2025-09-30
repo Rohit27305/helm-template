@@ -15,6 +15,11 @@ apps:
       port: 8002
       targetPort: 8002
     app: babbler-service
+    replicas: 1
+    startupProbe:
+      enabled: true
+      initialDelaySeconds: 60
+      periodSeconds: 10
     imageName: babbler-service
     tag: prodlatest
     resources:
@@ -31,10 +36,11 @@ apps:
     service:
       type: NodePort
     hpa:
-      enabled: true
+      enabled: false
       minReplicas: 1
       maxReplicas: 3
       targetCPUUtilizationPercentage: 80
+      targetMemoryUtilizationPercentage: 80
 
   - name: babbler-ui
     namespace: console-prod
@@ -42,6 +48,11 @@ apps:
       port: 3000
       targetPort: 3000
     app: babbler-ui
+    replicas: 1
+    startupProbe:
+      enabled: true
+      initialDelaySeconds: 60
+      periodSeconds: 10
     imageName: babbler-ui
     tag: prodlatest
     resources:
@@ -58,7 +69,7 @@ apps:
     service:
       type: NodePort
     hpa:
-      enabled: true
+      enabled: false
       minReplicas: 1
       maxReplicas: 3
       targetCPUUtilizationPercentage: 80
@@ -70,6 +81,11 @@ apps:
       targetPort: 8001
       grpcPort: 50051
     app: console-service
+    replicas: 2
+    startupProbe:
+      enabled: true
+      initialDelaySeconds: 60
+      periodSeconds: 10
     imageName: console-service
     tag: prodlatest
     resources:
@@ -85,10 +101,11 @@ apps:
     service:
       type: LoadBalancer
     hpa:
-      enabled: true
+      enabled: false
       minReplicas: 2
       maxReplicas: 5
       targetCPUUtilizationPercentage: 80
+      targetMemoryUtilizationPercentage: 80
 
   - name: console-ui
     namespace: console-prod
@@ -97,6 +114,11 @@ apps:
       targetPort: 3000
       grpcPort: 50050
     app: console-ui
+    replicas: 1
+    startupProbe:
+      enabled: true
+      initialDelaySeconds: 60
+      periodSeconds: 10
     imageName: console-ui
     tag: prodlatest
     resources:
@@ -112,10 +134,11 @@ apps:
     service:
       type: NodePort
     hpa:
-      enabled: true
+      enabled: false
       minReplicas: 1
       maxReplicas: 3
       targetCPUUtilizationPercentage: 80
+      targetMemoryUtilizationPercentage: 80
 
   - name: holler-service
     namespace: console-prod
@@ -123,6 +146,11 @@ apps:
       port: 8003
       targetPort: 8003
     app: holler-service
+    replicas: 1
+    startupProbe:
+      enabled: true
+      initialDelaySeconds: 60
+      periodSeconds: 10
     imageName: holler-service
     tag: prodlatest
     resources:
@@ -138,15 +166,21 @@ apps:
     service:
       type: ClusterIP
     hpa:
-      enabled: true
+      enabled: false
       minReplicas: 1
       maxReplicas: 3
       targetCPUUtilizationPercentage: 80
+      targetMemoryUtilizationPercentage: 80
 
   - name: maglo-service-beat
     namespace: console-prod
     ports: []
     app: maglo-service-beat
+    replicas: 1
+    startupProbe:
+      enabled: true
+      initialDelaySeconds: 60
+      periodSeconds: 10
     imageName: maglo-service
     tag: prodlatest
     resources:
@@ -169,6 +203,11 @@ apps:
       port: 8002
       targetPort: 8002
     app: maglo-service
+    replicas: 2
+    startupProbe:
+      enabled: true
+      initialDelaySeconds: 60
+      periodSeconds: 10
     imageName: maglo-service
     tag: prodlatest
     resources:
@@ -184,10 +223,11 @@ apps:
     service:
       type: NodePort
     hpa:
-      enabled: true
+      enabled: false
       minReplicas: 2
       maxReplicas: 5
       targetCPUUtilizationPercentage: 80
+      targetMemoryUtilizationPercentage: 80
 
   - name: maglo-ui
     namespace: console-prod
@@ -195,6 +235,11 @@ apps:
       port: 3000
       targetPort: 3000
     app: maglo-ui
+    replicas: 1
+    startupProbe:
+      enabled: true
+      initialDelaySeconds: 60
+      periodSeconds: 10
     imageName: maglo-ui
     tag: prodlatest
     resources:
@@ -210,15 +255,21 @@ apps:
     service:
       type: NodePort
     hpa:
-      enabled: true
+      enabled: false
       minReplicas: 1
       maxReplicas: 3
       targetCPUUtilizationPercentage: 80
+      targetMemoryUtilizationPercentage: 80
 
   - name: maglo-service-worker
     namespace: console-prod
     ports: []
     app: maglo-service-worker
+    replicas: 1
+    startupProbe:
+      enabled: true
+      initialDelaySeconds: 60
+      periodSeconds: 10
     imageName: maglo-service
     tag: prodlatest
     resources:
