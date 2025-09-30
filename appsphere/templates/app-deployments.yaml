@@ -20,7 +20,6 @@ spec:
         app: {{ .deployment.app }}
         app.kubernetes.io/name: {{ .name }}-pod
     spec:
-      serviceAccountName: {{ $.Values.rbac.serviceAccountName }}
       containers:
         - name: {{ .name }}
           image: "{{ $.Values.global.image.registry }}/{{ $.Values.global.image.repository }}/{{ .imageName }}:{{ .tag }}"
@@ -28,6 +27,7 @@ spec:
           {{- if .command }}
           command: [{{- range $index, $elem := .command }}{{ if $index }}, {{ end }}"{{ $elem }}"{{- end }}]
           {{- end }}
+          {{- if .ports }}
           ports:
             - containerPort: {{ .ports.targetPort | default .ports.port }}
               name: http-port
@@ -37,6 +37,7 @@ spec:
               name: grpc-port
               protocol: TCP
             {{- end }}
+          {{- end }}
           {{- if .env }}
           env:
             {{- toYaml .env | nindent 12 }}

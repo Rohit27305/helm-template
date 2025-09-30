@@ -144,13 +144,7 @@ apps:
         memory: "2Gi"
         cpu: "1"
     envFrom: ""
-    env:
-      - name: NODE_ENV
-        value: "production"
-      - name: NEXT_TELEMETRY_DISABLED
-        value: "1"
-      - name: HOSTNAME
-        value: "0.0.0.0"
+    env: []
     command: []
     service:
       type: NodePort
@@ -237,35 +231,6 @@ apps:
       minReplicas: 1
       maxReplicas: 3
       targetCPUUtilizationPercentage: 80
-
-  - name: grafana
-    namespace: maglo-integration
-    ports:
-      port: 3000
-      targetPort: 3000
-    app: grafana
-    imageName: grafana/grafana
-    tag: latest
-    resources:
-      requests:
-        memory: "500Mi"
-        cpu: "250m"
-      limits:
-        memory: "1Gi"
-        cpu: "500m"
-    envFrom: ""
-    env: []
-    command: []
-    service:
-      type: NodePort
-    hpa:
-      enabled: false
-    persistence:
-      enabled: true
-      existingClaim: ""
-      size: 5Gi
-      storageClassName: standard
-      accessMode: ReadWriteOnce
 
 ingress:
   annotations:

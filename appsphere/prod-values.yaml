@@ -205,13 +205,7 @@ apps:
         memory: "2Gi"
         cpu: "1"
     envFrom: ""
-    env:
-      - name: NODE_ENV
-        value: "production"
-      - name: NEXT_TELEMETRY_DISABLED
-        value: "1"
-      - name: HOSTNAME
-        value: "0.0.0.0"
+    env: []
     command: []
     service:
       type: NodePort
