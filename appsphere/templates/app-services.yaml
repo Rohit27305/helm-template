@@ -12,6 +12,7 @@ metadata:
 spec:
   selector:
     app: {{ .app }}
+    color: {{ default $.Values.global.activeColor .activeColor }}
   ports:
     - name: http-port
       protocol: TCP
@@ -26,6 +27,6 @@ spec:
       nodePort: {{ .ports.grpcNodePort }}
       {{- end }}
     {{- end }}
-  type: {{ .type }}
+  type: {{ .service.type | default "ClusterIP" }}
 {{- end }}
 {{- end }}

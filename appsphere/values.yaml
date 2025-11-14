@@ -1,0 +1,102 @@
+global:
+  namespace: demo
+  image:
+    registry: docker.io
+    repository: rohitmakunai
+    pullPolicy: Always
+  imagePullSecrets:
+    name: 
+  activeColor: blue
+
+apps:
+  - name: test-blue
+    namespace: demo
+    ports:
+      port: 80
+      targetPort: 80
+    app: test
+    replicas: 1
+    imageName: test
+    tags:
+      blue: blue
+      green: green  
+    envFrom: ""
+    env: []
+    command:
+    startupProbe:
+      enabled: false
+    resources:
+      enabled: true
+      requests:
+        memory: "128Mi"
+        cpu: "100m"
+      limits:
+        memory: "256Mi"
+        cpu: "200m"
+    service:
+      type: NodePort
+    hpa:
+      enabled: false
+      minReplicas: 2
+      maxReplicas: 5
+      targetCPUUtilizationPercentage: 80
+      targetMemoryUtilizationPercentage: 80
+
+  - name: test-green 
+    namespace: demo
+    ports:
+      port: 80
+      targetPort: 80
+    app: test
+    replicas: 1
+    imageName: test
+    tags:
+      blue: blue
+      green: green  
+    envFrom: ""
+    env: []
+    command:
+    startupProbe:
+      enabled: false
+    resources:
+      enabled: true
+      requests:
+        memory: "128Mi"
+        cpu: "100m"
+      limits:
+        memory: "256Mi"
+        cpu: "200m"
+    service:
+      type: NodePort
+    hpa:
+      enabled: false
+      minReplicas: 2
+      maxReplicas: 5
+      targetCPUUtilizationPercentage: 80
+      targetMemoryUtilizationPercentage: 80
+
+ingress:
+  annotations:
+    nginx.ingress.kubernetes.io/rewrite-target: /
+    nginx.ingress.kubernetes.io/ssl-redirect: "true"
+    nginx.ingress.kubernetes.io/proxy-body-size: "50m"
+  rules:
+    - host: test.example.com
+      paths:
+        - path: /
+          pathType: Prefix
+          backend:
+            service: nginx
+            port: 8000
+  tls:
+    - hosts:
+        - test.example.com
+      secretName: tls-secret
+
+rbac:
+  enabled: true
+  serviceAccountName: rbac-sa
+  roleName: rbac-role
+  roleBindingName: rbac-binding
+  tokenSecretName: rbac-token
+  group: devusers

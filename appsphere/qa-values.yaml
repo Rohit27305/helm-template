@@ -6,6 +6,7 @@ global:
     pullPolicy: Always
   imagePullSecrets:
     - name: maglo-qa-secrets
+  activeColor: blue
 
 apps:
   - name: console-service
@@ -24,6 +25,7 @@ apps:
     imageName: console-service
     tag: qalatest
     resources:
+      enabled: true
       requests:
         memory: "500Mi"
         cpu: "250m"
@@ -56,6 +58,7 @@ apps:
     imageName: console-ui
     tag: qalatest
     resources:
+      enabled: true
       requests:
         memory: "500Mi"
         cpu: "250m"
@@ -88,6 +91,7 @@ apps:
     imageName: maglo-service
     tag: qalatest
     resources:
+      enabled: true
       requests:
         memory: "500Mi"
         cpu: "500m"
@@ -118,6 +122,7 @@ apps:
     imageName: maglo-service
     tag: qalatest
     resources:
+      enabled: true
       requests:
         memory: "250Mi"
         cpu: "100m"
@@ -143,6 +148,7 @@ apps:
     imageName: maglo-service
     tag: qalatest
     resources:
+      enabled: true
       requests:
         memory: "250Mi"
         cpu: "100m"
@@ -170,6 +176,7 @@ apps:
     imageName: maglo-ui
     tag: qalatest
     resources:
+      enabled: true
       requests:
         memory: "1Gi"
         cpu: "500m"
@@ -202,6 +209,7 @@ apps:
     imageName: babbler-service
     tag: qalatest
     resources:
+      enabled: true
       requests:
         memory: "500Mi"
         cpu: "250m"
@@ -234,6 +242,7 @@ apps:
     imageName: babbler-ui
     tag: qalatest
     resources:
+      enabled: true
       requests:
         memory: "500Mi"
         cpu: "250m"
@@ -266,6 +275,7 @@ apps:
     imageName: holler-service
     tag: qalatest
     resources:
+      enabled: true
       requests:
         memory: "500Mi"
         cpu: "250m"

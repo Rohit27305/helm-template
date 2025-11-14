@@ -1,34 +1,39 @@
 {{- range .Values.apps }}
 {{- if and .hpa .hpa.enabled }}
+{{- $app := . }}
+{{- range $color := list "blue" "green" }}
 ---
 apiVersion: autoscaling/v2
 kind: HorizontalPodAutoscaler
 metadata:
-  name: {{ .name }}-hpa
-  namespace: {{ .namespace | default $.Values.global.namespace }}
+  name: {{ $app.name }}-{{ $color }}-hpa
+  namespace: {{ $app.namespace | default $.Values.global.namespace }}
   labels:
     {{- include "appshpere.labels" $ | nindent 4 }}
+    app: {{ $app.app }}
+    color: {{ $color }}
 spec:
   scaleTargetRef:
     apiVersion: apps/v1
     kind: Deployment
-    name: {{ .name }}
-  minReplicas: {{ .hpa.minReplicas }}
-  maxReplicas: {{ .hpa.maxReplicas }}
+    name: {{ $app.name }}-{{ $color }}
+  minReplicas: {{ $app.hpa.minReplicas }}
+  maxReplicas: {{ $app.hpa.maxReplicas }}
   metrics:
     - type: Resource
       resource:
         name: cpu
         target:
           type: Utilization
-          averageUtilization: {{ .hpa.targetCPUUtilizationPercentage }}
-    {{- if .hpa.targetMemoryUtilizationPercentage }}
+          averageUtilization: {{ $app.hpa.targetCPUUtilizationPercentage }}
+    {{- if $app.hpa.targetMemoryUtilizationPercentage }}
     - type: Resource
       resource:
         name: memory
         target:
           type: Utilization
-          averageUtilization: {{ .hpa.targetMemoryUtilizationPercentage }}
+          averageUtilization: {{ $app.hpa.targetMemoryUtilizationPercentage }}
     {{- end }}
+{{- end }}
 {{- end }}
 {{- end }}

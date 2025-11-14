@@ -6,6 +6,7 @@ global:
     pullPolicy: Always
   imagePullSecrets:
     - name: maglo-integration-secrets
+  activeColor: blue
 
 apps:
   - name: console-service
@@ -17,6 +18,7 @@ apps:
       grpcNodePort: 31425
     app: console-service
     replicas: 2
+          enabled: true
     startupProbe:
       enabled: true
       initialDelaySeconds: 60
@@ -24,6 +26,7 @@ apps:
     imageName: console-service
     tag: integrationlatest
     resources:
+      enabled: true
       requests:
         memory: "500Mi"
         cpu: "250m"
@@ -36,6 +39,7 @@ apps:
     service:
       type: NodePort
     hpa:
+          enabled: true
       enabled: false
       minReplicas: 2
       maxReplicas: 5
@@ -56,6 +60,7 @@ apps:
     imageName: console-ui
     tag: integrationlatest
     resources:
+          enabled: true
       requests:
         memory: "500Mi"
         cpu: "250m"
@@ -74,6 +79,7 @@ apps:
       targetCPUUtilizationPercentage: 80
 
   - name: maglo-service
+          enabled: true
     namespace: maglo-integration
     ports:
       port: 8002
@@ -92,6 +98,7 @@ apps:
         cpu: "500m"
       limits:
         memory: "1000Mi"
+          enabled: true
         cpu: "1"
     envFrom: maglo-env-vars
     env: []
@@ -112,6 +119,7 @@ apps:
     app: maglo-service-worker
     replicas: 1
     startupProbe:
+          enabled: true
       enabled: true
       initialDelaySeconds: 60
       periodSeconds: 10
@@ -132,6 +140,7 @@ apps:
       enabled: false
 
   - name: maglo-service-beat
+          enabled: true
     namespace: maglo-integration
     ports: []
     app: maglo-service-beat
@@ -152,6 +161,7 @@ apps:
     envFrom: maglo-env-vars
     env: []
     command: ["poetry", "run", "celery", "-A", "src.maglo_celery.celery_app.celery", "beat", "--loglevel=debug"]
+          enabled: true
     service: null
     hpa:
       enabled: false
@@ -172,6 +182,7 @@ apps:
     resources:
       requests:
         memory: "1Gi"
+          enabled: true
         cpu: "500m"
       limits:
         memory: "2Gi"

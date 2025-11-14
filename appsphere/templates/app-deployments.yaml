@@ -1,16 +1,20 @@
 {{- range .Values.apps }}
 {{- if .app }}
+{{- $app := . }}
+{{- $global := $ }}
+{{- range $color := list "blue" "green" }}
 ---
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: {{ .name }}
-  namespace: {{ .namespace | default $.Values.global.namespace }}
+  name: {{ $app.name }}-{{ $color }}
+  namespace: {{ $app.namespace | default $global.Values.global.namespace }}
   labels:
     {{- include "appshpere.labels" $ | nindent 4 }}
-    app: {{ .app }}
+    app: {{ $app.app }}
+    color: {{ $color }}
 spec:
-  replicas: {{ .replicas | default 1 }}
+  replicas: {{ $app.replicas | default 1 }}
   strategy:
     type: RollingUpdate
     rollingUpdate:
@@ -18,57 +22,74 @@ spec:
       maxSurge: 1
   selector:
     matchLabels:
-      app: {{ .app }}
+      app: {{ $app.app }}
+      color: {{ $color }}
   template:
     metadata:
       labels:
-        app: {{ .app }}
-        app.kubernetes.io/name: {{ .name }}-pod
+        app: {{ $app.app }}
+        color: {{ $color }}
+        app.kubernetes.io/name: {{ $app.name }}-pod
     spec:
+      {{- $secretName := default "" $global.Values.global.imagePullSecrets.name }}
+      {{- if ne (trim $secretName) "" }}
+      imagePullSecrets:
+        - name: {{ $secretName }}
+      {{- end }}
       containers:
-        - name: {{ .name }}
-          image: "{{ $.Values.global.image.registry }}/{{ $.Values.global.image.repository }}/{{ .imageName }}:{{ .tag }}"
-          imagePullPolicy: {{ $.Values.global.image.pullPolicy }}
-          {{- if .command }}
-          command: [{{- range $index, $elem := .command }}{{ if $index }}, {{ end }}"{{ $elem }}"{{- end }}]
+        - name: {{ $app.name }}
+          image: "{{ $global.Values.global.image.registry }}/{{ $global.Values.global.image.repository }}/{{ $app.imageName }}:{{ default $app.tag (index $app.tags $color) }}"
+          imagePullPolicy: {{ $global.Values.global.image.pullPolicy }}
+          {{- if $app.command }}
+          command:
+            {{- toYaml $app.command | nindent 12 }}
           {{- end }}
-          {{- if .ports }}
+          {{- if $app.ports }}
           ports:
-            - containerPort: {{ .ports.targetPort | default .ports.port }}
+            {{- if $app.ports.port }}
+            - containerPort: {{ $app.ports.targetPort | default $app.ports.port }}
               name: http-port
               protocol: TCP
-            {{- if .ports.grpcPort }}
-            - containerPort: {{ .ports.grpcPort }}
+            {{- end }}
+            {{- if $app.ports.grpcPort }}
+            - containerPort: {{ $app.ports.grpcPort }}
               name: grpc-port
               protocol: TCP
             {{- end }}
           {{- end }}
-          {{- if .env }}
+          {{- if $app.env }}
           env:
-            {{- toYaml .env | nindent 12 }}
+            {{- toYaml $app.env | nindent 12 }}
           {{- end }}
-          {{- if .envFrom }}
+          {{- if $app.envFrom }}
           envFrom:
             - secretRef:
-                name: {{ .envFrom }}
+                name: {{ $app.envFrom }}
           {{- end }}
-          {{- if .resources.enabled }}
+          {{- if and $app.resources $app.resources.enabled }}
           resources:
-            {{- if .resources.requests }}
-            {{- toYaml .resources.requests | nindent 12 }}
+            {{- if $app.resources.requests }}
+            {{- toYaml $app.resources.requests | nindent 12 }}
             {{- end }}
-            {{- if .resources.limits }}
-            {{- toYaml .resources.limits | nindent 12 }}
+            {{- if $app.resources.limits }}
+            {{- toYaml $app.resources.limits | nindent 12 }}
             {{- end }}
           {{- end }}
-          {{- if .startupProbe.enabled }}
+          {{- if and $app.readinessProbe $app.readinessProbe.enabled $app.ports.port }}
+          readinessProbe:
+            httpGet:
+              path: {{ $app.readinessProbe.path | default "/health" | quote }}
+              port: {{ $app.ports.port }}
+            initialDelaySeconds: {{ $app.readinessProbe.initialDelaySeconds | default 5 }}
+            periodSeconds: {{ $app.readinessProbe.periodSeconds | default 10 }}
+          {{- end }}
+          {{- if and $app.startupProbe $app.startupProbe.enabled }}
           startupProbe:
             exec:
               command: ["true"]
-            initialDelaySeconds: {{ .startupProbe.initialDelaySeconds | default 60 }}
-            periodSeconds: {{ .startupProbe.periodSeconds | default 10 }}
+            initialDelaySeconds: {{ $app.startupProbe.initialDelaySeconds | default 60 }}
+            periodSeconds: {{ $app.startupProbe.periodSeconds | default 10 }}
           {{- end }}
-      imagePullSecrets:
-        {{- toYaml $.Values.global.imagePullSecrets | nindent 8 }}
+{{- end }}
 {{- end }}
 {{- end }}

@@ -21,3 +21,13 @@ app.kubernetes.io/name: {{ include "appshpere.name" . }}
 app.kubernetes.io/instance: {{ .Release.Name }}
 app.kubernetes.io/managed-by: {{ .Release.Service }}
 {{- end }}
+
+{{/*
+Return the active color for service routing. Can be overridden per-app via `.activeColor`.
+*/}}
+{{- define "appshpere.activeColor" -}}
+{{- default "blue" .Values.global.activeColor -}}
+
+
+
+{{- end }}
