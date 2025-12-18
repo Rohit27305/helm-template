@@ -17,11 +17,14 @@ spec:
       protocol: TCP
       port: {{ .ports.port }}
       targetPort: {{ .ports.targetPort | default .ports.port }}
+      {{- if .ports.nodePort }}
+      nodePort: {{ .ports.nodePort }}
+      {{- end }}
     {{- if .ports.grpcPort }}
     - name: grpc-port
       protocol: TCP
       port: {{ .ports.grpcPort }}
-      targetPort: {{ .ports.grpcPort }}
+      targetPort: {{ .ports.grpcTargetPort | default .ports.grpcPort }}
       {{- if .ports.grpcNodePort }}
       nodePort: {{ .ports.grpcNodePort }}
       {{- end }}

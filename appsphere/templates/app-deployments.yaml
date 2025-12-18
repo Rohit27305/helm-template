@@ -49,10 +49,9 @@ spec:
           {{- end }}
           {{- if .envFrom }}
           envFrom:
-            - secretRef:
-                name: {{ .envFrom }}
+            {{- toYaml .envFrom | nindent 12 }}
           {{- end }}
-          {{- if .resources.enabled }}
+          {{- if .resources }}
           resources:
             {{- if .resources.requests }}
             {{- toYaml .resources.requests | nindent 12 }}
@@ -61,12 +60,21 @@ spec:
             {{- toYaml .resources.limits | nindent 12 }}
             {{- end }}
           {{- end }}
-          {{- if .startupProbe.enabled }}
+          {{- if .startupProbe }}
           startupProbe:
+            {{- if and .startupProbe.httpGet .startupProbe.httpGet.path }}
+            httpGet:
+              path: "{{ .startupProbe.httpGet.path }}"
+              port: {{ .startupProbe.httpGet.port | default 80 }}
+              scheme: {{ .startupProbe.httpGet.scheme | default "HTTP" | quote }}
+            {{- else }}
             exec:
               command: ["true"]
-            initialDelaySeconds: {{ .startupProbe.initialDelaySeconds | default 60 }}
+            {{- end }}
+            initialDelaySeconds: {{ .startupProbe.initialDelaySeconds | default 10 }}
             periodSeconds: {{ .startupProbe.periodSeconds | default 10 }}
+            timeoutSeconds: {{ .startupProbe.timeoutSeconds | default 5 }}
+            failureThreshold: {{ .startupProbe.failureThreshold | default 3 }}
           {{- end }}
       imagePullSecrets:
         {{- toYaml $.Values.global.imagePullSecrets | nindent 8 }}

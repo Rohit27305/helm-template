@@ -1,0 +1,24 @@
+{{- if .Values.gateway.enabled }}
+apiVersion: gateway.networking.k8s.io/v1
+kind: Gateway
+metadata:
+  name: {{ .Values.gateway.name }}
+  namespace: {{ .Values.gateway.namespace }}
+spec:
+  gatewayClassName: nginx
+  listeners:
+{{- range .Values.gateway.listeners }}
+    - name: {{ .host | replace "." "-" }}
+      hostname: {{ .host | quote }}
+      port: {{ .port }}
+      protocol: {{ .protocol }}
+      tls:
+        mode: Terminate
+        certificateRefs:
+          - kind: Secret
+            name: {{ .tls }}
+      allowedRoutes:
+        namespaces:
+          from: Same
+{{- end }}
+{{- end }}

@@ -1,0 +1,130 @@
+global:
+  namespace: demo
+  image:
+    registry: docker.io
+    repository: rohitmakunai
+    pullPolicy: Always
+  imagePullSecrets:
+    name: 
+
+apps:
+  - name: test-blue
+    namespace: demo
+    app: test
+    replicas: 1
+    imageName: test
+    tags:
+      blue: blue
+      green: green  
+    ports:
+      port: 80
+      targetPort: 80
+      nodePort: 30080
+      grpcPort: 50051
+      grpcTargetPort: 50051
+      grpcNodePort: 31425
+    envFrom: 
+      - secretRef: 
+          name: test-secret
+      - configMapRef: 
+          name: console-config
+    env: []
+    command: []
+    startupProbe:
+      enabled: true
+      failureThreshold: 3
+      periodSeconds: 10
+      initialDelaySeconds: 10
+      timeoutSeconds: 5
+      httpGet:
+        path: /
+        port: 80
+    resources:
+      enabled: true
+      requests:
+        memory: "128Mi"
+        cpu: "100m"
+      limits:
+        memory: "256Mi"
+        cpu: "200m"
+    service:
+      type: NodePort
+    hpa:
+      enabled: true
+      minReplicas: 2
+      maxReplicas: 5
+      targetCPUUtilizationPercentage: 80
+      targetMemoryUtilizationPercentage: 80
+
+  - name: test-green 
+    namespace: demo
+    ports:
+      port: 80
+      targetPort: 80
+    app: test
+    replicas: 1
+    imageName: test
+    tags:
+      blue: blue
+      green: green  
+    envFrom: ""
+    env: []
+    command:
+    startupProbe:
+      enabled: false
+    resources:
+      enabled: true
+      requests:
+        memory: "128Mi"
+        cpu: "100m"
+      limits:
+        memory: "256Mi"
+        cpu: "200m"
+    service:
+      type: NodePort
+    hpa:
+      enabled: false
+      minReplicas: 2
+      maxReplicas: 5
+      targetCPUUtilizationPercentage: 80
+      targetMemoryUtilizationPercentage: 80
+
+gateway: 
+  enabled: true
+  name: demo-gateway
+  namespace: demo
+
+  listeners:
+    - host: test-bg.makunaiglobal.ai
+      tls: tls-secret
+      port: 443
+      protocol: HTTPS
+      routes:
+        - path: /grpc
+          pathType: Prefix
+          backend:
+            service: nginx
+            port: 50051
+        - path: /
+          pathType: Prefix
+          backend:
+            service: nginx
+            port: 80
+    - host: test-2.makunaiglobal.ai
+      tls: tls-secret
+      port: 443
+      protocol: HTTPS
+      routes:
+        - path: /
+          pathType: Prefix
+          backend:
+            service: nginx
+            port: 80
+
+rbac:
+  enabled: true
+  serviceAccountName: rbac-sa
+  roleName: rbac-role
+  roleBindingName: rbac-binding
+  tokenSecretName: rbac-token
+  group: devusers
