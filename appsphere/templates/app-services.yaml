@@ -29,6 +29,6 @@ spec:
       nodePort: {{ .ports.grpcNodePort }}
       {{- end }}
     {{- end }}
-  type: {{ .type }}
+  type: {{ .service.type | default "ClusterIP" }}
 {{- end }}
 {{- end }}
