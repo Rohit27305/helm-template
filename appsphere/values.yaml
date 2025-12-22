@@ -5,7 +5,7 @@ global:
     repository: rohitmakunai
     pullPolicy: Always
   imagePullSecrets:
-    name: 
+    []
 
 apps:
   - name: test-blue
