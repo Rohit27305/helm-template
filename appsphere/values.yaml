@@ -101,12 +101,12 @@ gateway:
       protocol: HTTPS
       routes:
         - path: /grpc
-          pathType: Prefix
+          pathType: PathPrefix
           backend:
             service: nginx
             port: 50051
         - path: /
-          pathType: Prefix
+          pathType: PathPrefix
           backend:
             service: nginx
             port: 80
@@ -116,7 +116,7 @@ gateway:
       protocol: HTTPS
       routes:
         - path: /
-          pathType: Prefix
+          pathType: PathPrefix
           backend:
             service: nginx
             port: 80
