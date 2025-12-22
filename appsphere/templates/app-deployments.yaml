@@ -54,10 +54,12 @@ spec:
           {{- if .resources }}
           resources:
             {{- if .resources.requests }}
-            {{- toYaml .resources.requests | nindent 12 }}
+            requests:
+              {{- toYaml .resources.requests | nindent 14 }}
             {{- end }}
             {{- if .resources.limits }}
-            {{- toYaml .resources.limits | nindent 12 }}
+            limits:
+              {{- toYaml .resources.limits | nindent 14 }}
             {{- end }}
           {{- end }}
           {{- if .startupProbe }}
