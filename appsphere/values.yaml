@@ -13,9 +13,7 @@ apps:
     app: test
     replicas: 1
     imageName: test
-    tags:
-      blue: blue
-      green: green  
+    tag: blue  
     ports:
       port: 80
       targetPort: 80
@@ -64,9 +62,7 @@ apps:
     app: test
     replicas: 1
     imageName: test
-    tags:
-      blue: blue
-      green: green  
+    tag: green  
     envFrom: ""
     env: []
     command:
