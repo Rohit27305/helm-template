@@ -4,8 +4,7 @@ global:
     registry: docker.io
     repository: rohitmakunai
     pullPolicy: Always
-  imagePullSecrets:
-    []
+  imagePullSecrets: []
 
 apps:
   - name: test-blue
@@ -21,15 +20,11 @@ apps:
       grpcPort: 50051
       grpcTargetPort: 50051
       grpcNodePort: 31425
-    envFrom: 
-      - secretRef: 
-          name: test-secret
-      - configMapRef: 
-          name: console-config
+    envFrom: []
     env: []
     command: []
     startupProbe:
-      enabled: true
+      enabled: false
       failureThreshold: 3
       periodSeconds: 10
       initialDelaySeconds: 10
@@ -38,7 +33,7 @@ apps:
         path: /
         port: 80
     resources:
-      enabled: true
+      enabled: false
       requests:
         memory: "128Mi"
         cpu: "100m"
@@ -63,13 +58,13 @@ apps:
     replicas: 1
     imageName: test
     tag: green  
-    envFrom: ""
+    envFrom: []
     env: []
     command:
     startupProbe:
       enabled: false
     resources:
-      enabled: true
+      enabled: false
       requests:
         memory: "128Mi"
         cpu: "100m"
