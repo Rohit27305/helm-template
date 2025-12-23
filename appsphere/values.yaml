@@ -65,18 +65,18 @@ apps:
         memory: "256Mi"
         cpu: "200m"
 
-    # Security Context
-    podSecurityContext:
-      runAsUser: 1000
-      runAsGroup: 3000
-      fsGroup: 2000
-    securityContext:
-      capabilities:
-        drop:
-        - ALL
-      readOnlyRootFilesystem: true
-      runAsNonRoot: true
-      allowPrivilegeEscalation: false
+    # # Security Context
+    # podSecurityContext:
+    #   runAsUser: 1000
+    #   runAsGroup: 3000
+    #   fsGroup: 2000
+    # securityContext:
+    #   capabilities:
+    #     drop:
+    #     - ALL
+    #   readOnlyRootFilesystem: true
+    #   runAsNonRoot: true
+    #   allowPrivilegeEscalation: false
     
     # Scheduling
     nodeSelector: {}
