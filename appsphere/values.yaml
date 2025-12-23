@@ -1,3 +1,4 @@
+# Global Configuration
 global:
   namespace: demo
   image:
@@ -6,6 +7,7 @@ global:
     pullPolicy: Always
   imagePullSecrets: []
 
+# Application Configuration
 apps:
   - name: test-blue
     namespace: demo
@@ -129,10 +131,12 @@ apps:
       targetCPUUtilizationPercentage: 80
       targetMemoryUtilizationPercentage: 80
 
+# Gateway Configuration
 gateway: 
   enabled: true
   name: demo-gateway
   namespace: demo
+  annotations: {}
 
   listeners:
     - host: test-bg.makunaiglobal.ai
@@ -161,6 +165,7 @@ gateway:
             service: test-green
             port: 80
 
+# RBAC Configuration
 rbac:
   enabled: true
   serviceAccountName: rbac-sa
