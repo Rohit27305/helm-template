@@ -4,28 +4,37 @@ A comprehensive Helm chart designed for deploying and managing multiple microser
 
 ## Overview
 
-This Helm chart provides a flexible, scalable solution for deploying complex microservices architectures. It supports multiple application types including web services, user interfaces, and background workers, all managed through a unified configuration system.
+This Helm chart provides a flexible, scalable solution for deploying complex microservices architectures. It supports multiple application types including web services, user interfaces, and background workers, all managed through a unified configuration system using modern Kubernetes standards like the Gateway API.
 
 ## Architecture
 
 ### Chart Structure
 
 ```
-.
-├── Chart.yaml                 # Chart metadata and version
-├── values/                    # Environment-specific configurations
-│   ├── integration-values.yaml
-│   ├── qa-values.yaml
-│   └── prod-values.yaml
-├── templates/                 # Kubernetes resource templates
-│   ├── _helpers.tpl          # Template helper functions
-│   ├── app-deployments.yaml  # Application deployments
-│   ├── app-services.yaml     # Service definitions
-│   ├── hpa.yaml              # Horizontal Pod Autoscalers
-│   ├── ingress.yaml          # Ingress routing
-│   ├── rbac/                 # RBAC resources
-│   └── tests/                # Helm tests
-└── charts/                   # Dependency charts (if any)
+├── appsphere
+│   ├── Chart.yaml
+│   ├── templates
+│   │   ├── app-deployments.yaml
+│   │   ├── app-services.yaml
+│   │   ├── gateway.yaml
+│   │   ├── _helpers.tpl
+│   │   ├── hpa.yaml
+│   │   ├── httproute.yaml
+│   │   ├── NOTES.txt
+│   │   ├── pdb.yaml
+│   │   ├── rbac-sa-token.yaml
+│   │   ├── rolebinding.yaml
+│   │   ├── role.yaml
+│   │   ├── serviceaccount.yaml
+│   │   └── tests
+│   │       └── test-connection.yaml
+│   ├── values
+│   │   ├── integration-values.yaml
+│   │   ├── prod-values.yaml
+│   │   └── qa-values.yaml
+│   └── values.yaml
+├── GATEWAY.md
+└── README.md
 ```
 
 ### Application Types
@@ -42,321 +51,215 @@ The chart supports three main application patterns:
 - Environment-specific configurations
 - Namespace isolation
 - Different resource allocations per environment
-- Environment-specific ingress routing
+
+### 🌐 Networking & Gateway API
+- Modern **Gateway API** implementation (replacing legacy Ingress)
+- Centralized `Gateway` configuration
+- `HTTPRoute` for flexible routing rules
+- Multi-listener support (HTTP/HTTPS)
+- TLS termination
 
 ### 📈 Auto-Scaling & Resource Management
-- Horizontal Pod Autoscaling (HPA) with CPU and memory metrics
+- **Horizontal Pod Autoscaling (HPA)** with CPU and memory metrics
+- **Pod Disruption Budgets (PDB)** for high availability
 - Configurable resource requests and limits
-- Startup probes for application health checks
-- Rolling update strategies with zero downtime
+- Startup, Liveness, and Readiness probes
 
 ### 🔒 Security & RBAC
 - Role-Based Access Control (RBAC) setup
 - Service account management
-- Secret management for environment variables
+- Auto-generated tokens
+- Security Context configuration (Pod and Container levels)
 - Container image pull secrets
 
-### 🌐 Networking & Ingress
-- Centralized ingress configuration
-- TLS termination support
-- Multiple service types (ClusterIP, NodePort, LoadBalancer)
-- gRPC and HTTP service support
-
 ### 🔧 Operational Excellence
-- Configurable startup and readiness probes
-- Resource monitoring and limits
-- Logging and debugging capabilities
+- Configurable probes
+- Resource monitoring and limiting
 - Helm test integration
+- Standardized labels and metadata
 
 ## Configuration
 
 ### Global Configuration
 
+Define shared settings across all applications:
+
 ```yaml
 global:
-  namespace: your-namespace
+  namespace: demo
   image:
-    registry: your-registry.com
+    registry: docker.io
     repository: your-org
     pullPolicy: Always
-  imagePullSecrets:
-    - name: registry-secret
+  imagePullSecrets: []
 ```
 
 ### Application Configuration
 
-Each application in the `apps` array supports the following configuration:
+Configure individual applications in the `apps` list:
 
 ```yaml
 apps:
-  - name: service-name
-    namespace: optional-override-namespace
-    app: kubernetes-app-label
-    replicas: 2
+  - name: my-service
+    namespace: demo
+    app: my-app-label
+    replicas: 1
     
-    # Container Configuration
-    imageName: container-image-name
-    tag: image-tag
-    command: ["custom", "command"]  # Optional
+    # Image Details
+    imageName: my-service-image
+    tag: v1.0.0
     
     # Networking
     ports:
-      port: 8080
+      port: 80
       targetPort: 8080
-      grpcPort: 50051        # Optional gRPC port
-      grpcNodePort: 30051    # Optional NodePort for gRPC
+      nodePort: 30080      # Optional
+      grpcPort: 50051      # Optional
+      grpcTargetPort: 50051
     
-    # Health Checks
-    startupProbe:
-      enabled: true
-      initialDelaySeconds: 60
-      periodSeconds: 10
+    # Probes
+    livenessProbe:
+      httpGet:
+        path: /health
+        port: 80
+      initialDelaySeconds: 15
+    readinessProbe:
+      httpGet:
+        path: /ready
+        port: 80
     
     # Resources
     resources:
       enabled: true
       requests:
-        memory: "512Mi"
-        cpu: "250m"
+        memory: "128Mi"
+        cpu: "100m"
       limits:
-        memory: "1Gi"
-        cpu: "500m"
+        memory: "256Mi"
+        cpu: "200m"
     
-    # Environment Variables
-    envFrom: secret-name     # Kubernetes secret name
-    env: []                  # Additional environment variables
+    # Security
+    podSecurityContext:
+      runAsUser: 1000
+    securityContext:
+      readOnlyRootFilesystem: true
     
-    # Service Configuration
-    service:
-      type: ClusterIP        # ClusterIP, NodePort, LoadBalancer
-    
-    # Auto-scaling
+    # Autoscaling (HPA)
     hpa:
-      enabled: false
+      enabled: true
       minReplicas: 2
-      maxReplicas: 10
+      maxReplicas: 5
       targetCPUUtilizationPercentage: 80
       targetMemoryUtilizationPercentage: 80
+
+    # Availability (PDB)
+    pdb:
+      enabled: true
+      minAvailable: 1
 ```
 
-### Ingress Configuration
+### Gateway Configuration
+
+Configure ingress traffic using the Gateway API:
 
 ```yaml
-ingress:
-  annotations:
-    nginx.ingress.kubernetes.io/rewrite-target: /
-    nginx.ingress.kubernetes.io/ssl-redirect: "true"
-    nginx.ingress.kubernetes.io/proxy-body-size: "50m"
+gateway:
+  enabled: true
+  name: demo-gateway
+  namespace: demo
   
-  rules:
+  listeners:
     - host: api.example.com
-      paths:
-        - path: /
-          pathType: Prefix
+      port: 443
+      protocol: HTTPS
+      tls: tls-secret-name
+      routes:
+        - path: /v1
+          pathType: PathPrefix
           backend:
-            service: api-service
-            port: 8080
-  
-  tls:
-    - hosts:
-        - api.example.com
-      secretName: tls-secret
+            service: my-service
+            port: 80
+        - path: /grpc
+          pathType: PathPrefix
+          backend:
+            service: grpc-service
+            port: 50051
 ```
 
 ### RBAC Configuration
 
+Manage permissions and service accounts:
+
 ```yaml
 rbac:
   enabled: true
-  serviceAccountName: app-service-account
-  roleName: app-role
-  roleBindingName: app-role-binding
-  tokenSecretName: app-token
-  group: app-users
+  serviceAccountName: rbac-sa
+  roleName: rbac-role
+  roleBindingName: rbac-binding
+  tokenSecretName: rbac-token
+  group: devusers
 ```
 
 ## Deployment
 
 ### Prerequisites
-
-- Kubernetes cluster (v1.19+)
+- Kubernetes cluster (v1.24+) with Gateway API CRDs installed
 - Helm 3.x
-- kubectl configured with cluster access
-- Container registry access (if using private images)
+- `kubectl` configured
 
 ### Installation
 
 1. **Clone the repository:**
    ```bash
    git clone <repository-url>
-   cd helm-chart
+   cd helm-template
    ```
 
-2. **Customize values for your environment:**
-   ```bash
-   cp integration-values.yaml my-values.yaml
-   # Edit my-values.yaml with your configuration
-   ```
+2. **Customize values:**
+   Use the provided environment files as templates:
+   - `appsphere/integration-values.yaml`
+   - `appsphere/qa-values.yaml`
+   - `appsphere/prod-values.yaml`
 
 3. **Deploy to Kubernetes:**
+
    ```bash
-   # Install new deployment
-   helm install my-release . -f my-values.yaml
+   # Deploy using default values
+   helm install my-release ./appsphere
    
-   # Upgrade existing deployment
-   helm upgrade my-release . -f my-values.yaml
+   # Deploy/Upgrade using specific environment values
+   helm upgrade --install my-app ./appsphere -f appsphere/qa-values.yaml
    ```
-
-### Environment-Specific Deployments
-
-```bash
-# Integration Environment
-helm upgrade --install app-int . -f integration-values.yaml
-
-# QA Environment
-helm upgrade --install app-qa . -f qa-values.yaml
-
-# Production Environment
-helm upgrade --install app-prod . -f prod-values.yaml
-```
 
 ## Validation & Testing
 
 ### Helm Tests
-
-Run built-in connectivity tests:
+Run connection tests defined in the chart:
 ```bash
-helm test my-release
+helm test my-app
 ```
 
-### Validation Commands
-
+### Verify Resources
 ```bash
-# Validate template rendering
-helm template . -f my-values.yaml
+# Check Gateway Status
+kubectl get gateway -n demo
 
-# Dry run deployment
-helm upgrade --install --dry-run my-release . -f my-values.yaml
+# Check HTTP Routes
+kubectl get httproute -n demo
 
-# Check deployment status
-kubectl get pods,services,ingress -n your-namespace
+# Check HPA
+kubectl get hpa -n demo
 ```
 
-## Monitoring & Troubleshooting
+## Troubleshooting
 
-### Health Checks
-
-- Startup probes ensure containers are ready before receiving traffic
-- HPA monitors CPU and memory usage for automatic scaling
-- Resource limits prevent resource exhaustion
-
-### Common Commands
-
-```bash
-# View pod logs
-kubectl logs -f deployment/service-name -n namespace
-
-# Check HPA status
-kubectl get hpa -n namespace
-
-# View ingress status
-kubectl describe ingress -n namespace
-
-# Check RBAC permissions
-kubectl auth can-i --list --as=system:serviceaccount:namespace:service-account
-```
-
-### Debugging
-
-1. **Pod Issues:**
-   ```bash
-   kubectl describe pod <pod-name> -n <namespace>
-   kubectl logs <pod-name> -n <namespace>
-   ```
-
-2. **Service Connectivity:**
-   ```bash
-   kubectl port-forward service/<service-name> 8080:8080 -n <namespace>
-   ```
-
-3. **Ingress Issues:**
-   ```bash
-   kubectl describe ingress <ingress-name> -n <namespace>
-   ```
+- **Gateway Not Ready**: Ensure Gateway API CRDs are installed on your cluster.
+- **Routes Not Matching**: Verify the `host` in `listeners` matches exactly (or check for wildcard support). Ensure the `backend.service` matches the `name` defined in your `apps` list.
+- **Pod Scheduling Failed**: Check resource quotas and `resources` requests in `values.yaml`.
 
 ## Best Practices
 
-### Security
-- Use specific image tags instead of `latest`
-- Configure resource limits to prevent resource exhaustion
-- Enable RBAC with minimal required permissions
-- Store sensitive data in Kubernetes secrets
-
-### Performance
-- Set appropriate resource requests and limits
-- Configure HPA based on actual usage patterns
-- Use rolling updates for zero-downtime deployments
-- Monitor startup times and adjust probe timings
-
-### Maintenance
-- Regularly update container images
-- Monitor resource usage and adjust limits
-- Keep Helm chart dependencies updated
-- Use semantic versioning for releases
-
-## Advanced Configuration
-
-### Custom Resource Management
-
-For applications requiring special handling:
-
-```yaml
-# Disable resource management for specific apps
-resources:
-  enabled: false
-
-# Custom startup probe configuration
-startupProbe:
-  enabled: true
-  initialDelaySeconds: 120
-  periodSeconds: 30
-```
-
-### Background Workers
-
-For worker applications that don't need services:
-
-```yaml
-apps:
-  - name: worker-app
-    # ... other config
-    service: null          # No service creation
-    ports: []             # No ports needed
-    command: ["worker", "start"]
-```
-
-### Multi-Port Services
-
-For applications exposing multiple ports:
-
-```yaml
-ports:
-  port: 8080              # Primary HTTP port
-  targetPort: 8080
-  grpcPort: 50051         # Additional gRPC port
-  grpcNodePort: 30051     # NodePort for external gRPC access
-```
-
-## Contributing
-
-1. Follow Kubernetes and Helm best practices
-2. Test changes across all environment configurations
-3. Update documentation for any new features
-4. Validate templates with `helm lint`
-
-## Support
-
-For issues and questions:
-- Check the troubleshooting section
-- Review Kubernetes and Helm documentation
-- Validate configuration with dry-run deployments
+- **Tagging**: Avoid using `latest` tags in production.
+- **Resource Limits**: Always set `resources` for critical apps to ensure QoS.
+- **Probes**: Configure `readinessProbe` to prevent traffic to unready pods.
+- **Security**: Run containers as non-root users using `securityContext`.
