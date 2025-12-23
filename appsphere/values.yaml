@@ -136,7 +136,6 @@ gateway:
   enabled: true
   name: demo-gateway
   namespace: demo
-  annotations: {}
 
   listeners:
     - host: test-bg.makunaiglobal.ai
@@ -155,7 +154,6 @@ gateway:
             service: test-blue
             port: 80
     - host: test-2.makunaiglobal.ai
-      tls: tls-secret
       port: 443
       protocol: HTTPS
       routes:

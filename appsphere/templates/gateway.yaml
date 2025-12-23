@@ -4,18 +4,15 @@ kind: Gateway
 metadata:
   name: {{ .Values.gateway.name }}
   namespace: {{ .Values.gateway.namespace }}
-  {{- with .Values.gateway.annotations }}
-  annotations:
-    {{- toYaml . | nindent 4 }}
-  {{- end }}
 spec:
-  gatewayClassName: nginx
   listeners:
 {{- range .Values.gateway.listeners }}
-    - name: {{ .host | replace "." "-" }}
+    {{- if .tls }}
+    # HTTPS Listener
+    - name: {{ .host | replace "." "-" }}-https
       hostname: {{ .host | quote }}
-      port: {{ .port }}
-      protocol: {{ .protocol }}
+      port: 443
+      protocol: HTTPS
       tls:
         mode: Terminate
         certificateRefs:
@@ -24,5 +21,24 @@ spec:
       allowedRoutes:
         namespaces:
           from: Same
+    
+    # HTTP Listener (Automatic Redirect/Fallback)
+    - name: {{ .host | replace "." "-" }}-http
+      hostname: {{ .host | quote }}
+      port: 80
+      protocol: HTTP
+      allowedRoutes:
+        namespaces:
+          from: Same
+    {{- else }}
+    # HTTP Only Listener
+    - name: {{ .host | replace "." "-" }}-http
+      hostname: {{ .host | quote }}
+      port: {{ .port | default 80 }}
+      protocol: HTTP
+      allowedRoutes:
+        namespaces:
+          from: Same
+    {{- end }}
 {{- end }}
 {{- end }}

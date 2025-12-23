@@ -4,11 +4,19 @@ kind: HTTPRoute
 metadata:
   name: {{ .Values.gateway.name }}-route
   namespace: {{ .Values.gateway.namespace }}
-spec:
   parentRefs:
 {{- range .Values.gateway.listeners }}
+    {{- if .tls }}
+    # Bind to both HTTPS and HTTP listeners
     - name: {{ $.Values.gateway.name }}
-      sectionName: {{ .host | replace "." "-" }}
+      sectionName: {{ .host | replace "." "-" }}-https
+    - name: {{ $.Values.gateway.name }}
+      sectionName: {{ .host | replace "." "-" }}-http
+    {{- else }}
+    # Bind to HTTP listener
+    - name: {{ $.Values.gateway.name }}
+      sectionName: {{ .host | replace "." "-" }}-http
+    {{- end }}
 {{- end }}
   hostnames:
 {{- range .Values.gateway.listeners }}
