@@ -4,6 +4,7 @@ kind: HTTPRoute
 metadata:
   name: {{ .Values.gateway.name }}-route
   namespace: {{ .Values.gateway.namespace }}
+spec:
   parentRefs:
 {{- range .Values.gateway.listeners }}
     {{- if .tls }}

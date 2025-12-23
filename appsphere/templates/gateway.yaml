@@ -5,6 +5,7 @@ metadata:
   name: {{ .Values.gateway.name }}
   namespace: {{ .Values.gateway.namespace }}
 spec:
+  gatewayClassName: nginx
   listeners:
 {{- range .Values.gateway.listeners }}
     {{- if .tls }}
