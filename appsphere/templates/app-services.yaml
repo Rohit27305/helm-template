@@ -11,7 +11,7 @@ metadata:
     app: {{ .app }}
 spec:
   selector:
-    app: {{ .app }}
+    app: {{ .name }}
   ports:
     - name: http-port
       protocol: TCP

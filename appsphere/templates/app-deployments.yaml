@@ -18,17 +18,37 @@ spec:
       maxSurge: 1
   selector:
     matchLabels:
-      app: {{ .app }}
+      app: {{ .name }}
   template:
     metadata:
       labels:
-        app: {{ .app }}
+        app: {{ .name }}
         app.kubernetes.io/name: {{ .name }}-pod
     spec:
+      {{- if .nodeSelector }}
+      nodeSelector:
+        {{- toYaml .nodeSelector | nindent 8 }}
+      {{- end }}
+      {{- if .affinity }}
+      affinity:
+        {{- toYaml .affinity | nindent 8 }}
+      {{- end }}
+      {{- if .tolerations }}
+      tolerations:
+        {{- toYaml .tolerations | nindent 8 }}
+      {{- end }}
+      {{- if .podSecurityContext }}
+      securityContext:
+        {{- toYaml .podSecurityContext | nindent 8 }}
+      {{- end }}
       containers:
         - name: {{ .name }}
           image: "{{ $.Values.global.image.registry }}/{{ $.Values.global.image.repository }}/{{ .imageName }}:{{ .tag }}"
           imagePullPolicy: {{ $.Values.global.image.pullPolicy }}
+          {{- if .securityContext }}
+          securityContext:
+            {{- toYaml .securityContext | nindent 12 }}
+          {{- end }}
           {{- if .command }}
           command: [{{- range $index, $elem := .command }}{{ if $index }}, {{ end }}"{{ $elem }}"{{- end }}]
           {{- end }}
@@ -52,6 +72,7 @@ spec:
             {{- toYaml .envFrom | nindent 12 }}
           {{- end }}
           {{- if .resources }}
+          {{- if .resources.enabled }}
           resources:
             {{- if .resources.requests }}
             requests:
@@ -61,6 +82,15 @@ spec:
             limits:
               {{- toYaml .resources.limits | nindent 14 }}
             {{- end }}
+          {{- end }}
+          {{- end }}
+          {{- if .livenessProbe }}
+          livenessProbe:
+            {{- toYaml .livenessProbe | nindent 12 }}
+          {{- end }}
+          {{- if .readinessProbe }}
+          readinessProbe:
+            {{- toYaml .readinessProbe | nindent 12 }}
           {{- end }}
           {{- if .startupProbe }}
           startupProbe:

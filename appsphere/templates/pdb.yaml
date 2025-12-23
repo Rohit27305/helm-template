@@ -1,0 +1,22 @@
+{{- range .Values.apps }}
+{{- if and .pdb .pdb.enabled }}
+---
+apiVersion: policy/v1
+kind: PodDisruptionBudget
+metadata:
+  name: {{ .name }}-pdb
+  namespace: {{ .namespace | default $.Values.global.namespace }}
+  labels:
+    {{- include "appshpere.labels" $ | nindent 4 }}
+spec:
+  {{- if .pdb.minAvailable }}
+  minAvailable: {{ .pdb.minAvailable }}
+  {{- end }}
+  {{- if .pdb.maxUnavailable }}
+  maxUnavailable: {{ .pdb.maxUnavailable }}
+  {{- end }}
+  selector:
+    matchLabels:
+      app: {{ .name }}
+{{- end }}
+{{- end }}
