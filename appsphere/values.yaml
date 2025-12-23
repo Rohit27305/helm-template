@@ -99,7 +99,7 @@ gateway:
         - path: /
           pathType: PathPrefix
           backend:
-            service: nginx
+            service: test-blue
             port: 80
     - host: test-2.makunaiglobal.ai
       tls: tls-secret
@@ -109,7 +109,7 @@ gateway:
         - path: /
           pathType: PathPrefix
           backend:
-            service: nginx
+            service: test-green
             port: 80
 
 rbac:
