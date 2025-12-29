@@ -178,12 +178,6 @@ gateway:
                   type: ReplaceFullPath
                   replaceFullPath: /login
 
-  # To increase proxy header size in NGINX Gateway Fabric, use NginxProxy config:
-  config:
-    nginxDirectives:
-      large_client_header_buffers: "4 16k"
-      proxy_buffer_size: "16k"
-
 # RBAC Configuration
 rbac:
   enabled: true
