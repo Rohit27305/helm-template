@@ -1,0 +1,14 @@
+{{- if  and .Values.gateway .Values.gateway.enabled .Values.gateway.clientSettings }}
+apiVersion: gateway.nginx.org/v1alpha1
+kind: ClientSettingsPolicy
+metadata:
+  name: {{ .Values.gateway.clientSettings.name }}
+  namespace: {{ .Values.gateway.namespace }}
+spec:
+  targetRef:
+    group: gateway.networking.k8s.io
+    kind: Gateway
+    name: {{ .Values.gateway.name }}
+  body:
+    maxSize: {{ .Values.gateway.clientSettings.maxSize | quote }}
+{{- end }}  
