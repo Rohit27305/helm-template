@@ -170,13 +170,6 @@ gateway:
           backend:
             service: test-green
             port: 80
-          filters:
-            - type: URLRewrite
-              urlRewrite:
-                hostname: elsewhere.example
-                path:
-                  type: ReplaceFullPath
-                  replaceFullPath: /login
 
 # RBAC Configuration
 rbac:
