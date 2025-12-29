@@ -41,10 +41,12 @@ Verified chart structure for Gateway implementation:
 │   ├── templates
 │   │   ├── app-deployments.yaml
 │   │   ├── app-services.yaml
+│   │   ├── gateway-client-setting.yaml
 │   │   ├── gateway.yaml
 │   │   ├── _helpers.tpl
 │   │   ├── hpa.yaml
-│   │   ├── httproute.yaml
+│   │   ├── http-redirect.yaml
+│   │   ├── http-route.yaml
 │   │   ├── NOTES.txt
 │   │   ├── pdb.yaml
 │   │   ├── rbac-sa-token.yaml
@@ -72,24 +74,22 @@ The Gateway API functions through a clear hierarchy of resources:
 
 ```mermaid
 graph TD
-    Client([User Request]) --> LB[Load Balancer]
-    LB --> GW[Gateway Resource]
+    Client80([User Request HTTP:80]) --> LB80[Load Balancer]
+    Client443([User Request HTTPS:443]) --> LB443[Load Balancer]
     
-    subgraph "Gateway Configuration"
-        GW -- "HTTPS:443" --> Listener1[Listener: test-bg.makunaiglobal.ai]
-        GW -- "HTTPS:443" --> Listener2[Listener: test-2.makunaiglobal.ai]
+    subgraph "Gateway Listeners"
+        LB80 --> ListenerHTTP[HTTP Listener]
+        LB443 --> ListenerHTTPS[HTTPS Listener]
     end
     
-    subgraph "Routing Rules (HTTPRoutes)"
-        Listener1 --> Route1[HTTPRoute: /grpc]
-        Listener1 --> Route2[HTTPRoute: /]
-        Listener2 --> Route3[HTTPRoute: /]
+    subgraph "Routing & Redirection"
+        ListenerHTTP -- "sslRedirect: true" --> Redirect[HTTPRoute: Redirect to HTTPS]
+        ListenerHTTPS --> RouteHTTPS[HTTPRoute: Application Traffic]
     end
     
     subgraph "Backend Services"
-        Route1 --> Svc1[Service: nginx:50051]
-        Route2 --> Svc2[Service: test-blue:80]
-        Route3 --> Svc3[Service: test-green:80]
+        RouteHTTPS --> Svc1[Backend Service 1]
+        RouteHTTPS --> Svc2[Backend Service 2]
     end
 ```
 
@@ -112,33 +112,40 @@ This chart uses a centralized configuration model where routes are defined direc
 ```yaml
 gateway:
   listeners:
-    # --- Listener 1 ---
     - host: api.example.com
       port: 443
       protocol: HTTPS
       tls: tls-secret-name
+      sslRedirect: true      # Enables HTTP -> HTTPS redirection
       
-      # Routing Rules
+      # Routing Rules (for HTTPS traffic)
       routes:
         - path: /v1
           pathType: PathPrefix
           backend:
             service: my-service
             port: 80
-            
-        - path: /v2
-          pathType: PathPrefix
-          backend:
-            service: new-service
-            port: 80
 ```
 
-### 3. Key Fields Explained
+### 3. Advanced Proxy Settings
+The chart supports `ClientSettingsPolicy` (specifically for NGINX Gateway Fabric) to configure low-level proxy settings like request body size.
+
+```yaml
+gateway:
+  clientSettings:
+    enabled: true
+    name: gateway-client-settings
+    maxSize: "50"  # Set max body size (e.g., 50m)
+```
+
+### 4. Key Fields Explained
 
 | Field | Description |
 |-------|-------------|
 | `host` | The hostname to listen for (e.g., `api.example.com`). Matches specific `HTTPRoutes`. |
 | `tls` | Name of the Kubernetes Secret containing the TLS certificate. |
+| `sslRedirect` | Boolean. If true, traffic on port 80 for this host is redirected to HTTPS. |
+| `clientSettings` | Configuration for `ClientSettingsPolicy` (e.g., `maxSize` for body size). |
 | `routes` | List of routing rules attached to this listener. |
 | `path` | URL path to match (e.g., `/api`). |
 | `backend.service` | Name of the Kubernetes Service to forward traffic to. |

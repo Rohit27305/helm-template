@@ -16,10 +16,12 @@ This Helm chart provides a flexible, scalable solution for deploying complex mic
 │   ├── templates
 │   │   ├── app-deployments.yaml
 │   │   ├── app-services.yaml
+│   │   ├── gateway-client-setting.yaml
 │   │   ├── gateway.yaml
 │   │   ├── _helpers.tpl
 │   │   ├── hpa.yaml
-│   │   ├── httproute.yaml
+│   │   ├── http-redirect.yaml
+│   │   ├── http-route.yaml
 │   │   ├── NOTES.txt
 │   │   ├── pdb.yaml
 │   │   ├── rbac-sa-token.yaml
@@ -57,6 +59,8 @@ The chart supports three main application patterns:
 - Centralized `Gateway` configuration
 - `HTTPRoute` for flexible routing rules
 - Multi-listener support (HTTP/HTTPS)
+- **Automatic HTTP to HTTPS Redirection**
+- **Advanced Proxy Settings** (e.g., Request Body Size)
 - TLS termination
 
 ### 📈 Auto-Scaling & Resource Management
@@ -165,14 +169,21 @@ Configure ingress traffic using the Gateway API:
 ```yaml
 gateway:
   enabled: true
-  name: demo-gateway
+  name: gateway
   namespace: demo
+  
+  # Advanced Proxy Settings (optional)
+  clientSettings:
+    enabled: true
+    name: gateway-client-settings
+    maxSize: "50"  # Maximum allowed request body size
   
   listeners:
     - host: api.example.com
       port: 443
       protocol: HTTPS
       tls: tls-secret-name
+      sslRedirect: true  # Automatically redirect HTTP to HTTPS
       routes:
         - path: /v1
           pathType: PathPrefix
