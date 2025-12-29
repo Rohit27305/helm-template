@@ -6,6 +6,13 @@ metadata:
   namespace: {{ .Values.gateway.namespace }}
 spec:
   gatewayClassName: nginx
+  {{- if .Values.gateway.config }}
+  infrastructure:
+    parametersRef:
+      group: gateway.nginx.org
+      kind: NginxProxy
+      name: {{ .Values.gateway.name }}-config
+  {{- end }}
   listeners:
 {{- range .Values.gateway.listeners }}
     {{- if .tls }}
