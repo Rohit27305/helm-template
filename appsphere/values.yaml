@@ -156,15 +156,6 @@ gateway:
               requestRedirect:
                 scheme: https
                 statusCode: 301                    
-    - host: test-bg.makunaiglobal.ai
-      routes:
-        - path: /
-          pathType: PathPrefix
-          filters:
-            - type: RequestRedirect
-              requestRedirect:
-                scheme: https
-                statusCode: 301
     - host: test-2.makunaiglobal.ai
       tls: tls-secret
       routes:
