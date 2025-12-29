@@ -144,7 +144,7 @@ gateway:
         - path: /grpc
           pathType: PathPrefix
           backend:
-            service: nginx
+            service: test-blue
             port: 50051
         - path: /
           pathType: PathPrefix
