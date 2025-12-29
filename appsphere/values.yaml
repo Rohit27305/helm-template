@@ -85,7 +85,7 @@ apps:
 
     # Service
     service:
-      type: NodePort
+      type: ClusterIP
 
     # HPA
     hpa:
@@ -123,7 +123,7 @@ apps:
         memory: "256Mi"
         cpu: "200m"
     service:
-      type: NodePort
+      type: ClusterIP
     hpa:
       enabled: false
       minReplicas: 2
