@@ -140,6 +140,7 @@ gateway:
   listeners:
     - host: test-bg.makunaiglobal.ai
       tls: tls-secret
+      sslRedirect: true
       routes:
         - path: /grpc
           pathType: PathPrefix
@@ -153,6 +154,7 @@ gateway:
             port: 80                  
     - host: test-2.makunaiglobal.ai
       tls: tls-secret
+      sslRedirect: true
       routes:
         - path: /
           pathType: PathPrefix

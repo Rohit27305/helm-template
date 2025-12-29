@@ -1,0 +1,36 @@
+{{- if .Values.gateway.enabled }}
+{{- $anyRedirect := false }}
+{{- range .Values.gateway.listeners }}
+  {{- if and .tls .sslRedirect }}
+    {{- $anyRedirect = true }}
+  {{- end }}
+{{- end }}
+
+{{- if $anyRedirect }}
+apiVersion: gateway.networking.k8s.io/v1
+kind: HTTPRoute
+metadata:
+  name: {{ .Values.gateway.name }}-redirect
+  namespace: {{ .Values.gateway.namespace }}
+spec:
+  parentRefs:
+{{- range .Values.gateway.listeners }}
+  {{- if and .tls .sslRedirect }}
+    - name: {{ $.Values.gateway.name }}
+      sectionName: {{ .host | replace "." "-" }}-http
+  {{- end }}
+{{- end }}
+  hostnames:
+{{- range .Values.gateway.listeners }}
+  {{- if and .tls .sslRedirect }}
+    - {{ .host | quote }}
+  {{- end }}
+{{- end }}
+  rules:
+    - filters:
+        - type: RequestRedirect
+          requestRedirect:
+            scheme: https
+            statusCode: 301
+{{- end }}
+{{- end }}

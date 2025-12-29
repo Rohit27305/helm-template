@@ -8,11 +8,14 @@ spec:
   parentRefs:
 {{- range .Values.gateway.listeners }}
     {{- if .tls }}
-    # Bind to both HTTPS and HTTP listeners
+    # Bind to HTTPS listener
     - name: {{ $.Values.gateway.name }}
       sectionName: {{ .host | replace "." "-" }}-https
+    {{- if not .sslRedirect }}
+    # Bind to HTTP listener (Redirect disabled)
     - name: {{ $.Values.gateway.name }}
       sectionName: {{ .host | replace "." "-" }}-http
+    {{- end }}
     {{- else }}
     # Bind to HTTP listener
     - name: {{ $.Values.gateway.name }}
