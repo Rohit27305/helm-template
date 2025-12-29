@@ -134,8 +134,12 @@ apps:
 # Gateway Configuration
 gateway: 
   enabled: true
-  name: demo-gateway
+  name: gateway
   namespace: demo
+
+  clientSettings:
+    name: gateway-client-settings
+    maxSize: "50"
 
   listeners:
     - host: test-bg.makunaiglobal.ai
@@ -151,7 +155,7 @@ gateway:
           pathType: PathPrefix
           backend:
             service: test-blue
-            port: 80                  
+            port: 80
     - host: test-2.makunaiglobal.ai
       tls: tls-secret
       sslRedirect: true
