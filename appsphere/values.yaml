@@ -150,12 +150,7 @@ gateway:
           pathType: PathPrefix
           backend:
             service: test-blue
-            port: 80
-          filters:
-            - type: RequestRedirect
-              requestRedirect:
-                scheme: https
-                statusCode: 301                    
+            port: 80                  
     - host: test-2.makunaiglobal.ai
       tls: tls-secret
       routes:
