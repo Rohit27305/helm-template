@@ -31,10 +31,10 @@ apps:
     ports:
       port: 80
       targetPort: 80
-      nodePort: 30080
-      grpcPort: 50051
-      grpcTargetPort: 50051
-      grpcNodePort: 31425
+      # nodePort: 30080
+      # grpcPort: 50051
+      # grpcTargetPort: 50051
+      # grpcNodePort: 31425
 
     # Environment
     envFrom: []
