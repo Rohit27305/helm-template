@@ -36,6 +36,7 @@ This Helm chart provides a flexible, scalable solution for deploying complex mic
 │   │   └── qa-values.yaml
 │   └── values.yaml
 ├── GATEWAY.md
+├── BLUE_GREEN.md
 └── README.md
 ```
 
@@ -60,6 +61,7 @@ The chart supports three main application patterns:
 - `HTTPRoute` for flexible routing rules
 - Multi-listener support (HTTP/HTTPS)
 - **Automatic HTTP to HTTPS Redirection**
+- **Blue-Green & Canary Deployments** via weighted traffic shifting
 - **Advanced Proxy Settings** (e.g., Request Body Size)
 - TLS termination
 

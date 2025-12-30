@@ -45,18 +45,6 @@ spec:
         app: {{ $name }}
         app.kubernetes.io/name: {{ $name }}-pod
     spec:
-      {{- if $app.nodeSelector }}
-      nodeSelector:
-        {{- toYaml $app.nodeSelector | nindent 8 }}
-      {{- end }}
-      {{- if $app.affinity }}
-      affinity:
-        {{- toYaml $app.affinity | nindent 8 }}
-      {{- end }}
-      {{- if $app.tolerations }}
-      tolerations:
-        {{- toYaml $app.tolerations | nindent 8 }}
-      {{- end }}
       {{- if $app.podSecurityContext }}
       securityContext:
         {{- toYaml $app.podSecurityContext | nindent 8 }}
@@ -65,13 +53,6 @@ spec:
         - name: {{ $app.name }}
           image: "{{ $.Values.global.image.registry }}/{{ $.Values.global.image.repository }}/{{ $app.imageName }}:{{ $tag }}"
           imagePullPolicy: {{ $.Values.global.image.pullPolicy }}
-          {{- if $app.securityContext }}
-          securityContext:
-            {{- toYaml $app.securityContext | nindent 12 }}
-          {{- end }}
-          {{- if $app.command }}
-          command: [{{- range $index, $elem := $app.command }}{{ if $index }}, {{ end }}"{{ $elem }}"{{- end }}]
-          {{- end }}
           {{- if $app.ports }}
           ports:
             - containerPort: {{ $app.ports.targetPort | default $app.ports.port }}
@@ -94,14 +75,7 @@ spec:
           {{- if $app.resources }}
           {{- if $app.resources.enabled }}
           resources:
-            {{- if $app.resources.requests }}
-            requests:
-              {{- toYaml $app.resources.requests | nindent 14 }}
-            {{- end }}
-            {{- if $app.resources.limits }}
-            limits:
-              {{- toYaml $app.resources.limits | nindent 14 }}
-            {{- end }}
+            {{- toYaml $app.resources | nindent 12 }}
           {{- end }}
           {{- end }}
           {{- if $app.livenessProbe }}

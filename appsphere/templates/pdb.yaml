@@ -20,12 +20,7 @@ metadata:
   labels:
     {{- include "appshpere.labels" $ | nindent 4 }}
 spec:
-  {{- if $app.pdb.minAvailable }}
-  minAvailable: {{ $app.pdb.minAvailable }}
-  {{- end }}
-  {{- if $app.pdb.maxUnavailable }}
-  maxUnavailable: {{ $app.pdb.maxUnavailable }}
-  {{- end }}
+  minAvailable: {{ $app.pdb.minAvailable | default 1 }}
   selector:
     matchLabels:
       app: {{ $name }}

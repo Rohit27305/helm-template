@@ -3,25 +3,13 @@
 {{- $app := . }}
 {{- $slots := list "" }}
 {{- if and .blueGreen .blueGreen.enabled }}
-  {{- $slots = list "blue" "green" "primary" }}
+  {{- $slots = list "blue" "green" }}
 {{- end }}
 
 {{- range $slot := $slots }}
 {{- $name := $app.name }}
-{{- $targetApp := $app.name }}
-{{- if eq $slot "blue" }}
-  {{- $name = printf "%s-blue" $app.name }}
-  {{- $targetApp = printf "%s-blue" $app.name }}
-{{- else if eq $slot "green" }}
-  {{- $name = printf "%s-green" $app.name }}
-  {{- $targetApp = printf "%s-green" $app.name }}
-{{- else if eq $slot "primary" }}
-  {{- $name = $app.name }}
-  {{- if ge $app.blueGreen.blue.weight $app.blueGreen.green.weight }}
-    {{- $targetApp = printf "%s-blue" $app.name }}
-  {{- else }}
-    {{- $targetApp = printf "%s-green" $app.name }}
-  {{- end }}
+{{- if $slot }}
+  {{- $name = printf "%s-%s" $app.name $slot }}
 {{- end }}
 ---
 apiVersion: v1
@@ -34,7 +22,7 @@ metadata:
     app: {{ $app.app }}
 spec:
   selector:
-    app: {{ $targetApp }}
+    app: {{ $name }}
   ports:
     - name: http-port
       protocol: TCP

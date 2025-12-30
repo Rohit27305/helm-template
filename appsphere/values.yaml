@@ -18,10 +18,8 @@ apps:
       enabled: true
       blue:
         tag: blue
-        weight: 100
       green:
         tag: green
-        weight: 0
 
     # Image
     imageName: test
@@ -124,10 +122,10 @@ gateway:
           backendRefs:
             - name: test-blue
               port: 80
-              weight: 60
+              weight: 100
             - name: test-green
               port: 80
-              weight: 40
+              weight: 0
 
 # RBAC Configuration
 rbac:

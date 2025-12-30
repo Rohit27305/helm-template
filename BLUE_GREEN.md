@@ -4,10 +4,10 @@ This document explains how the Blue-Green deployment strategy is implemented in 
 
 ## Strategy Overview
 
-We maintain two identical environments, **Blue** and **Green**, for each application. Instead of a hard switch, we use weights to control how much traffic goes to each version on the **same URL**.
+We maintain two environments, **Blue** (Default/Stable) and **Green** (New/Canary), for each application. Instead of a hard switch, we use weights in the Gateway API to control how much traffic goes to each version on the **same URL**.
 
-- **Blue**: One version of the application (e.g., Stable).
-- **Green**: Another version (e.g., New/Canary).
+- **Blue**: The standard version of the application.
+- **Green**: The new/canary version of the application.
 
 ## Configuration
 
@@ -18,19 +18,19 @@ blueGreen:
   enabled: true
   blue:
     tag: v1.0.0
-    weight: 100  # Percentage of traffic
   green:
     tag: v2.0.0
-    weight: 0    # Percentage of traffic
 ```
+
+> [!NOTE]
+> Weights are managed at the **Gateway** level for precise traffic control across the shared hostname.
 
 ### How it works
 
 1. **Dual Deployments**: Two deployments are created: `app-name-blue` and `app-name-green`.
-2. **Dedicated Services**:
+2. **Dedicated Services**: 
    - `app-name-blue`: Direct access to Blue pods.
    - `app-name-green`: Direct access to Green pods.
-   - `app-name`: Standard fallback service (points to the slot with higher weight).
 3. **Gateway API Integration**: The `HTTPRoute` splits traffic between `-blue` and `-green` services based on the **explicitly defined** weights in the `gateway.listeners[].routes[].backendRefs` section of `values.yaml`.
 
 ## How to Switch (Production Workflow)
@@ -46,42 +46,23 @@ helm upgrade <release-name> . --set apps[0].blueGreen.green.tag=v2.0.0
 ### 2. Verify on Same URL (Canary/Gradual Rollout)
 Shift a small percentage of traffic to the new version to test it "live" on the production URL:
 ```bash
+# gateway.listeners[0].routes[0].backendRefs[0] -> Blue
+# gateway.listeners[0].routes[0].backendRefs[1] -> Green
 helm upgrade <release-name> . \
-  --set apps[0].blueGreen.blue.weight=90 \
-  --set apps[0].blueGreen.green.weight=10
+  --set gateway.listeners[0].routes[0].backendRefs[0].weight=90 \
+  --set gateway.listeners[0].routes[0].backendRefs[1].weight=10
 ```
 
 ### 3. Full Cutover
 Once satisfied, move 100% of the traffic to the new version:
 ```bash
 helm upgrade <release-name> . \
-  --set apps[0].blueGreen.blue.weight=0 \
-  --set apps[0].blueGreen.green.weight=100
-```
-
-### 4. Instant Rollback
-In case of errors, immediately shift all traffic back to the stable version by updating the weights in the `gateway.listeners` section.
-
-### 5. Managing Weights in Gateway Configuration
-The traffic shift is now explicitly controlled in the `gateway` section of your `values.yaml` for each route:
-
-```yaml
-gateway:
-  listeners:
-    - host: test.makunaiglobal.ai
-      routes:
-        - path: /
-          backendRefs:
-            - name: test-blue
-              port: 80
-              weight: "100"
-            - name: test-green
-              port: 80
-              weight: "0"
+  --set gateway.listeners[0].routes[0].backendRefs[0].weight=0 \
+  --set gateway.listeners[0].routes[0].backendRefs[1].weight=100
 ```
 
 ## Benefits
+- **Minimal Complexity**: Uses only two dedicated services for clear separation.
 - **Same URL Testing**: Validate new versions on the actual production domain.
-- **Canary Rollouts**: Gradually increase traffic to reduce risk.
 - **Zero Downtime**: Shifts happen at the networking layer without pod restarts.
-- **Simplified CI/CD**: No manual template changes; strictly value-driven.
+- **Simplified CI/CD**: Strictly value-driven rollout and rollback.
