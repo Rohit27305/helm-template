@@ -124,10 +124,10 @@ gateway:
           backendRefs:
             - name: test-blue
               port: 80
-              weight: 100
+              weight: 60
             - name: test-green
               port: 80
-              weight: 0
+              weight: 40
 
 # RBAC Configuration
 rbac:
