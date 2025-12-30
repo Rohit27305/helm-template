@@ -1,34 +1,58 @@
 {{- range .Values.apps }}
 {{- if .service }}
+{{- $app := . }}
+{{- $slots := list "" }}
+{{- if and .blueGreen .blueGreen.enabled }}
+  {{- $slots = list "blue" "green" "primary" }}
+{{- end }}
+
+{{- range $slot := $slots }}
+{{- $name := $app.name }}
+{{- $targetApp := $app.name }}
+{{- if eq $slot "blue" }}
+  {{- $name = printf "%s-blue" $app.name }}
+  {{- $targetApp = printf "%s-blue" $app.name }}
+{{- else if eq $slot "green" }}
+  {{- $name = printf "%s-green" $app.name }}
+  {{- $targetApp = printf "%s-green" $app.name }}
+{{- else if eq $slot "primary" }}
+  {{- $name = $app.name }}
+  {{- if ge $app.blueGreen.blue.weight $app.blueGreen.green.weight }}
+    {{- $targetApp = printf "%s-blue" $app.name }}
+  {{- else }}
+    {{- $targetApp = printf "%s-green" $app.name }}
+  {{- end }}
+{{- end }}
 ---
 apiVersion: v1
 kind: Service
 metadata:
-  name: {{ .name }}
-  namespace: {{ .namespace | default $.Values.global.namespace }}
+  name: {{ $name }}
+  namespace: {{ $app.namespace | default $.Values.global.namespace }}
   labels:
     {{- include "appshpere.labels" $ | nindent 4 }}
-    app: {{ .app }}
+    app: {{ $app.app }}
 spec:
   selector:
-    app: {{ .name }}
+    app: {{ $targetApp }}
   ports:
     - name: http-port
       protocol: TCP
-      port: {{ .ports.port }}
-      targetPort: {{ .ports.targetPort | default .ports.port }}
-      {{- if .ports.nodePort }}
-      nodePort: {{ .ports.nodePort }}
+      port: {{ $app.ports.port }}
+      targetPort: {{ $app.ports.targetPort | default $app.ports.port }}
+      {{- if $app.ports.nodePort }}
+      nodePort: {{ $app.ports.nodePort }}
       {{- end }}
-    {{- if .ports.grpcPort }}
+    {{- if $app.ports.grpcPort }}
     - name: grpc-port
       protocol: TCP
-      port: {{ .ports.grpcPort }}
-      targetPort: {{ .ports.grpcTargetPort | default .ports.grpcPort }}
-      {{- if .ports.grpcNodePort }}
-      nodePort: {{ .ports.grpcNodePort }}
+      port: {{ $app.ports.grpcPort }}
+      targetPort: {{ $app.ports.grpcTargetPort | default $app.ports.grpcPort }}
+      {{- if $app.ports.grpcNodePort }}
+      nodePort: {{ $app.ports.grpcNodePort }}
       {{- end }}
     {{- end }}
-  type: {{ .service.type | default "ClusterIP" }}
+  type: {{ $app.service.type | default "ClusterIP" }}
+{{- end }}
 {{- end }}
 {{- end }}
