@@ -73,10 +73,8 @@ spec:
             {{- toYaml $app.envFrom | nindent 12 }}
           {{- end }}
           {{- if $app.resources }}
-          {{- if $app.resources.enabled }}
           resources:
             {{- toYaml $app.resources | nindent 12 }}
-          {{- end }}
           {{- end }}
           {{- if $app.livenessProbe }}
           livenessProbe:
