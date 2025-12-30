@@ -1,16 +1,26 @@
 {{- range .Values.apps }}
 {{- if .app }}
+{{- $app := . }}
+{{- $slots := list "default" }}
+{{- if and .blueGreen .blueGreen.enabled }}
+  {{- $slots = list "blue" "green" }}
+{{- end }}
+
+{{- range $slot := $slots }}
 ---
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: {{ .name }}
-  namespace: {{ .namespace | default $.Values.global.namespace }}
+  name: {{ if eq $slot "default" }}{{ $app.name }}{{ else }}{{ $app.name }}-{{ $slot }}{{ end }}
+  namespace: {{ $app.namespace | default $.Values.global.namespace }}
   labels:
     {{- include "appshpere.labels" $ | nindent 4 }}
-    app: {{ .app }}
+    app: {{ $app.app }}
+    {{- if ne $slot "default" }}
+    slot: {{ $slot }}
+    {{- end }}
 spec:
-  replicas: {{ .replicas | default 1 }}
+  replicas: {{ $app.replicas | default 1 }}
   strategy:
     type: RollingUpdate
     rollingUpdate:
@@ -18,97 +28,104 @@ spec:
       maxSurge: 1
   selector:
     matchLabels:
-      app: {{ .name }}
+      app: {{ $app.name }}
+      {{- if ne $slot "default" }}
+      slot: {{ $slot }}
+      {{- end }}
   template:
     metadata:
       labels:
-        app: {{ .name }}
-        app.kubernetes.io/name: {{ .name }}-pod
+        app: {{ $app.name }}
+        {{- if ne $slot "default" }}
+        slot: {{ $slot }}
+        {{- end }}
+        app.kubernetes.io/name: {{ $app.name }}-pod
     spec:
-      {{- if .nodeSelector }}
+      {{- if $app.nodeSelector }}
       nodeSelector:
-        {{- toYaml .nodeSelector | nindent 8 }}
+        {{- toYaml $app.nodeSelector | nindent 8 }}
       {{- end }}
-      {{- if .affinity }}
+      {{- if $app.affinity }}
       affinity:
-        {{- toYaml .affinity | nindent 8 }}
+        {{- toYaml $app.affinity | nindent 8 }}
       {{- end }}
-      {{- if .tolerations }}
+      {{- if $app.tolerations }}
       tolerations:
-        {{- toYaml .tolerations | nindent 8 }}
+        {{- toYaml $app.tolerations | nindent 8 }}
       {{- end }}
-      {{- if .podSecurityContext }}
+      {{- if $app.podSecurityContext }}
       securityContext:
-        {{- toYaml .podSecurityContext | nindent 8 }}
+        {{- toYaml $app.podSecurityContext | nindent 8 }}
       {{- end }}
       containers:
-        - name: {{ .name }}
-          image: "{{ $.Values.global.image.registry }}/{{ $.Values.global.image.repository }}/{{ .imageName }}:{{ .tag }}"
+        - name: {{ $app.name }}
+          image: "{{ $.Values.global.image.registry }}/{{ $.Values.global.image.repository }}/{{ $app.imageName }}:{{ if eq $slot "blue" }}{{ $app.blueGreen.blue.tag }}{{ else if eq $slot "green" }}{{ $app.blueGreen.green.tag }}{{ else }}{{ $app.tag }}{{ end }}"
           imagePullPolicy: {{ $.Values.global.image.pullPolicy }}
-          {{- if .securityContext }}
+          {{- if $app.securityContext }}
           securityContext:
-            {{- toYaml .securityContext | nindent 12 }}
+            {{- toYaml $app.securityContext | nindent 12 }}
           {{- end }}
-          {{- if .command }}
-          command: [{{- range $index, $elem := .command }}{{ if $index }}, {{ end }}"{{ $elem }}"{{- end }}]
+          {{- if $app.command }}
+          command: [{{- range $index, $elem := $app.command }}{{ if $index }}, {{ end }}"{{ $elem }}"{{- end }}]
           {{- end }}
-          {{- if .ports }}
+          {{- if $app.ports }}
           ports:
-            - containerPort: {{ .ports.targetPort | default .ports.port }}
+            - containerPort: {{ $app.ports.targetPort | default $app.ports.port }}
               name: http-port
               protocol: TCP
-            {{- if .ports.grpcPort }}
-            - containerPort: {{ .ports.grpcPort }}
+            {{- if $app.ports.grpcPort }}
+            - containerPort: {{ $app.ports.grpcPort }}
               name: grpc-port
               protocol: TCP
             {{- end }}
           {{- end }}
-          {{- if .env }}
+          {{- if $app.env }}
           env:
-            {{- toYaml .env | nindent 12 }}
+            {{- toYaml $app.env | nindent 12 }}
           {{- end }}
-          {{- if .envFrom }}
+          {{- if $app.envFrom }}
           envFrom:
-            {{- toYaml .envFrom | nindent 12 }}
+            {{- toYaml $app.envFrom | nindent 12 }}
           {{- end }}
-          {{- if .resources }}
-          {{- if .resources.enabled }}
+          {{- if $app.resources }}
+          {{- if $app.resources.enabled }}
           resources:
-            {{- if .resources.requests }}
+            {{- if $app.resources.requests }}
             requests:
-              {{- toYaml .resources.requests | nindent 14 }}
+              {{- toYaml $app.resources.requests | nindent 14 }}
             {{- end }}
-            {{- if .resources.limits }}
+            {{- if $app.resources.limits }}
             limits:
-              {{- toYaml .resources.limits | nindent 14 }}
+              {{- toYaml $app.resources.limits | nindent 14 }}
             {{- end }}
           {{- end }}
           {{- end }}
-          {{- if .livenessProbe }}
+          {{- if $app.livenessProbe }}
           livenessProbe:
-            {{- toYaml .livenessProbe | nindent 12 }}
+            {{- toYaml $app.livenessProbe | nindent 12 }}
           {{- end }}
-          {{- if .readinessProbe }}
+          {{- if $app.readinessProbe }}
           readinessProbe:
-            {{- toYaml .readinessProbe | nindent 12 }}
+            {{- toYaml $app.readinessProbe | nindent 12 }}
           {{- end }}
-          {{- if .startupProbe }}
+          {{- if $app.startupProbe }}
           startupProbe:
-            {{- if and .startupProbe.httpGet .startupProbe.httpGet.path }}
+            {{- if and $app.startupProbe.httpGet $app.startupProbe.httpGet.path }}
             httpGet:
-              path: "{{ .startupProbe.httpGet.path }}"
-              port: {{ .startupProbe.httpGet.port | default 80 }}
-              scheme: {{ .startupProbe.httpGet.scheme | default "HTTP" | quote }}
+              path: "{{ $app.startupProbe.httpGet.path }}"
+              port: {{ $app.startupProbe.httpGet.port | default 80 }}
+              scheme: {{ $app.startupProbe.httpGet.scheme | default "HTTP" | quote }}
             {{- else }}
             exec:
               command: ["true"]
             {{- end }}
-            initialDelaySeconds: {{ .startupProbe.initialDelaySeconds | default 10 }}
-            periodSeconds: {{ .startupProbe.periodSeconds | default 10 }}
-            timeoutSeconds: {{ .startupProbe.timeoutSeconds | default 5 }}
-            failureThreshold: {{ .startupProbe.failureThreshold | default 3 }}
+            initialDelaySeconds: {{ $app.startupProbe.initialDelaySeconds | default 10 }}
+            periodSeconds: {{ $app.startupProbe.periodSeconds | default 10 }}
+            timeoutSeconds: {{ $app.startupProbe.timeoutSeconds | default 5 }}
+            failureThreshold: {{ $app.startupProbe.failureThreshold | default 3 }}
           {{- end }}
       imagePullSecrets:
         {{- toYaml $.Values.global.imagePullSecrets | nindent 8 }}
+{{- end }}
 {{- end }}
 {{- end }}

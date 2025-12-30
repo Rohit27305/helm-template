@@ -185,16 +185,24 @@ gateway:
       tls: tls-secret-name
       sslRedirect: true  # Automatically redirect HTTP to HTTPS
       routes:
-        - path: /v1
-          pathType: PathPrefix
-          backend:
-            service: my-service
-            port: 80
         - path: /grpc
           pathType: PathPrefix
-          backend:
-            service: grpc-service
-            port: 50051
+          backendRefs:
+            - name: test-blue
+              port: 50051
+              weight: "100"
+            - name: test-green
+              port: 50051
+              weight: "0"
+        - path: /
+          pathType: PathPrefix
+          backendRefs:
+            - name: test-blue
+              port: 80
+              weight: "100"
+            - name: test-green
+              port: 80
+              weight: "0"
 ```
 
 ### RBAC Configuration

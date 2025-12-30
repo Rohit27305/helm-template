@@ -120,11 +120,15 @@ gateway:
       
       # Routing Rules (for HTTPS traffic)
       routes:
-        - path: /v1
+        - path: /grpc
           pathType: PathPrefix
-          backend:
-            service: my-service
-            port: 80
+          backendRefs:
+            - name: test-blue
+              port: 50051
+              weight: "100"
+            - name: test-green
+              port: 50051
+              weight: "0"
 ```
 
 ### 3. Advanced Proxy Settings
@@ -148,7 +152,10 @@ gateway:
 | `clientSettings` | Configuration for `ClientSettingsPolicy` (e.g., `maxSize` for body size). |
 | `routes` | List of routing rules attached to this listener. |
 | `path` | URL path to match (e.g., `/api`). |
-| `backend.service` | Name of the Kubernetes Service to forward traffic to. |
+| `backendRefs` | List of backend services and their weights. |
+| `backendRefs[].name` | Name of the Kubernetes Service to forward traffic to. |
+| `backendRefs[].port` | Port of the backend service. |
+| `backendRefs[].weight` | Weight (0-100) as a string for traffic splitting. |
 
 ## ✅ Verification
 

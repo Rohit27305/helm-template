@@ -40,8 +40,11 @@ spec:
             type: {{ .pathType }}
             value: {{ .path | quote }}
       backendRefs:
-        - name: {{ .backend.service }}
-          port: {{ .backend.port }}
+        {{- range .backendRefs }}
+        - name: {{ .name }}
+          port: {{ .port }}
+          weight: {{ .weight | default 100 }}
+        {{- end }}
       {{- if .filters }}
       filters:
         {{- toYaml .filters | nindent 8 }}
