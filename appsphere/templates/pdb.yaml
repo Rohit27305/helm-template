@@ -1,8 +1,8 @@
-{{- range .Values.apps }}
-{{- if and .pdb .pdb.enabled }}
-{{- $app := . }}
+{{- range $appName, $appValues := .Values.apps }}
+{{- if and $appValues.pdb $appValues.pdb.enabled }}
+{{- $app := $appValues }}
 {{- $slots := list "" }}
-{{- if and .blueGreen .blueGreen.enabled }}
+{{- if and $app.blueGreen $app.blueGreen.enabled }}
   {{- $slots = list "blue" "green" }}
 {{- end }}
 
@@ -16,9 +16,10 @@ apiVersion: policy/v1
 kind: PodDisruptionBudget
 metadata:
   name: {{ $name }}-pdb
-  namespace: {{ $app.namespace | default $.Values.global.namespace }}
+  namespace: {{ $.Values.global.namespace }}
   labels:
     {{- include "appshpere.labels" $ | nindent 4 }}
+    app: {{ $app.name }}
 spec:
   minAvailable: {{ $app.pdb.minAvailable | default 1 }}
   selector:

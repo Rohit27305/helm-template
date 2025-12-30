@@ -1,8 +1,8 @@
-{{- range .Values.apps }}
-{{- if .app }}
-{{- $app := . }}
+{{- range $appName, $appValues := .Values.apps }}
+{{- if $appValues.name }}
+{{- $app := $appValues }}
 {{- $slots := list "" }}
-{{- if and .blueGreen .blueGreen.enabled }}
+{{- if and $app.blueGreen $app.blueGreen.enabled }}
   {{- $slots = list "blue" "green" }}
 {{- end }}
 
@@ -18,10 +18,10 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: {{ $name }}
-  namespace: {{ $app.namespace | default $.Values.global.namespace }}
+  namespace: {{ $.Values.global.namespace }}
   labels:
     {{- include "appshpere.labels" $ | nindent 4 }}
-    app: {{ $app.app }}
+    app: {{ $app.name }}
     {{- if $slot }}
     slot: {{ $slot }}
     {{- end }}
@@ -50,7 +50,7 @@ spec:
         {{- toYaml $app.podSecurityContext | nindent 8 }}
       {{- end }}
       containers:
-        - name: {{ $app.name }}
+        - name: {{ $name }}
           image: "{{ $.Values.global.image.registry }}/{{ $.Values.global.image.repository }}/{{ $app.imageName }}:{{ $tag }}"
           imagePullPolicy: {{ $.Values.global.image.pullPolicy }}
           {{- if $app.ports }}
@@ -84,21 +84,9 @@ spec:
           readinessProbe:
             {{- toYaml $app.readinessProbe | nindent 12 }}
           {{- end }}
-          {{- if $app.startupProbe }}
+          {{- if and $app.startupProbe $app.startupProbe.enabled }}
           startupProbe:
-            {{- if and $app.startupProbe.httpGet $app.startupProbe.httpGet.path }}
-            httpGet:
-              path: "{{ $app.startupProbe.httpGet.path }}"
-              port: {{ $app.startupProbe.httpGet.port | default 80 }}
-              scheme: {{ $app.startupProbe.httpGet.scheme | default "HTTP" | quote }}
-            {{- else }}
-            exec:
-              command: ["true"]
-            {{- end }}
-            initialDelaySeconds: {{ $app.startupProbe.initialDelaySeconds | default 10 }}
-            periodSeconds: {{ $app.startupProbe.periodSeconds | default 10 }}
-            timeoutSeconds: {{ $app.startupProbe.timeoutSeconds | default 5 }}
-            failureThreshold: {{ $app.startupProbe.failureThreshold | default 3 }}
+            {{- toYaml $app.startupProbe | nindent 12 }}
           {{- end }}
       imagePullSecrets:
         {{- toYaml $.Values.global.imagePullSecrets | nindent 8 }}

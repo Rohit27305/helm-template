@@ -102,13 +102,11 @@ global:
 
 ### Application Configuration
 
-Configure individual applications in the `apps` list:
+Configure individual applications in the `apps` dictionary. The map key is used as the default application name and label.
 
 ```yaml
 apps:
-  - name: my-service
-    namespace: demo
-    app: my-app-label
+  my-service:
     replicas: 1
     
     # Image Details
@@ -156,7 +154,6 @@ apps:
       minReplicas: 2
       maxReplicas: 5
       targetCPUUtilizationPercentage: 80
-      targetMemoryUtilizationPercentage: 80
 
     # Availability (PDB)
     pdb:
@@ -172,7 +169,6 @@ Configure ingress traffic using the Gateway API:
 gateway:
   enabled: true
   name: gateway
-  namespace: demo
   
   # Advanced Proxy Settings (optional)
   clientSettings:
@@ -189,14 +185,16 @@ gateway:
       routes:
         - path: /v1
           pathType: PathPrefix
-          backend:
-            service: my-service
-            port: 80
+          backendRefs:
+            - name: my-service
+              port: 80
+              weight: 100
         - path: /grpc
           pathType: PathPrefix
-          backend:
-            service: grpc-service
-            port: 50051
+          backendRefs:
+            - name: grpc-service
+              port: 50051
+              weight: 100
 ```
 
 ### RBAC Configuration
@@ -266,8 +264,9 @@ kubectl get hpa -n demo
 
 ## Troubleshooting
 
+- **Resources Wiped After `helm upgrade`**: Ensure you are not using list indices (e.g., `apps[0]`) in your `--set` commands. Since `apps` is a dictionary, use the app name directly: `--set apps.my-service.tag=v1.0.0`.
 - **Gateway Not Ready**: Ensure Gateway API CRDs are installed on your cluster.
-- **Routes Not Matching**: Verify the `host` in `listeners` matches exactly (or check for wildcard support). Ensure the `backend.service` matches the `name` defined in your `apps` list.
+- **Routes Not Matching**: Verify the `host` in `listeners` matches exactly. Ensure the `backendRefs[].name` matches the computed service name (e.g., `my-service`, `my-service-blue`).
 - **Pod Scheduling Failed**: Check resource quotas and `resources` requests in `values.yaml`.
 
 ## Best Practices

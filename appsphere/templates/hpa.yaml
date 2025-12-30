@@ -1,8 +1,8 @@
-{{- range .Values.apps }}
-{{- if and .hpa .hpa.enabled }}
-{{- $app := . }}
+{{- range $appName, $appValues := .Values.apps }}
+{{- if and $appValues.hpa $appValues.hpa.enabled }}
+{{- $app := $appValues }}
 {{- $slots := list "" }}
-{{- if and .blueGreen .blueGreen.enabled }}
+{{- if and $app.blueGreen $app.blueGreen.enabled }}
   {{- $slots = list "blue" "green" }}
 {{- end }}
 
@@ -16,9 +16,10 @@ apiVersion: autoscaling/v2
 kind: HorizontalPodAutoscaler
 metadata:
   name: {{ $name }}-hpa
-  namespace: {{ $app.namespace | default $.Values.global.namespace }}
+  namespace: {{ $.Values.global.namespace }}
   labels:
     {{- include "appshpere.labels" $ | nindent 4 }}
+    app: {{ $app.name }}
 spec:
   scaleTargetRef:
     apiVersion: apps/v1
@@ -33,14 +34,6 @@ spec:
         target:
           type: Utilization
           averageUtilization: {{ $app.hpa.targetCPUUtilizationPercentage }}
-    {{- if $app.hpa.targetMemoryUtilizationPercentage }}
-    - type: Resource
-      resource:
-        name: memory
-        target:
-          type: Utilization
-          averageUtilization: {{ $app.hpa.targetMemoryUtilizationPercentage }}
-    {{- end }}
 {{- end }}
 {{- end }}
 {{- end }}

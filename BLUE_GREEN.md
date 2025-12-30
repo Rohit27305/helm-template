@@ -4,22 +4,24 @@ This document explains how the Blue-Green deployment strategy is implemented in 
 
 ## Strategy Overview
 
-We maintain two environments, **Blue** (Default/Stable) and **Green** (New/Canary), for each application. Instead of a hard switch, we use weights in the Gateway API to control how much traffic goes to each version on the **same URL**.
+We maintain two environments, **Blue** (Stable) and **Green** (New/Canary). Instead of a hard switch, we use weights in the Gateway API to control how much traffic goes to each version on the **same URL**.
 
-- **Blue**: The standard version of the application.
-- **Green**: The new/canary version of the application.
+- **Blue**: The currently stable version of the application.
+- **Green**: The new or canary version being rolled out.
 
 ## Configuration
 
-The configuration is managed in `values.yaml` under each app's `blueGreen` section.
+The configuration is managed in `values.yaml` under each app's `blueGreen` section. Note that `apps` is a **dictionary (map)**, not a list.
 
 ```yaml
-blueGreen:
-  enabled: true
-  blue:
-    tag: v1.0.0
-  green:
-    tag: v2.0.0
+apps:
+  demo:  # 'demo' is the map key
+    blueGreen:
+      enabled: true
+      blue:
+        tag: v1.0.0
+      green:
+        tag: v2.0.0
 ```
 
 > [!NOTE]
@@ -27,28 +29,31 @@ blueGreen:
 
 ### How it works
 
-1. **Dual Deployments**: Two deployments are created: `app-name-blue` and `app-name-green`.
+1. **Dual Deployments**: Two deployments are created: `demo-blue` and `demo-green`.
 2. **Dedicated Services**: 
-   - `app-name-blue`: Direct access to Blue pods.
-   - `app-name-green`: Direct access to Green pods.
+   - `demo-blue`: Direct access to Blue pods.
+   - `demo-green`: Direct access to Green pods.
 3. **Gateway API Integration**: The `HTTPRoute` splits traffic between `-blue` and `-green` services based on the **explicitly defined** weights in the `gateway.listeners[].routes[].backendRefs` section of `values.yaml`.
 
-## How to Switch (Production Workflow)
+## How to Rollout (Production Workflow)
 
-The best practice is to use `helm upgrade` with `--set` for CI/CD automation.
+The best practice is to use `helm upgrade` with `--set` for CI/CD automation. 
+
+> [!IMPORTANT]
+> Because `apps` is a dictionary, you must refer to the app name directly (e.g., `apps.demo`) instead of using an index like `apps[0]`. This ensures Helm **merges** your changes instead of wiping out the entire app configuration.
 
 ### 1. Deploy New Version to Inactive Slot
 If Blue is currently at 100% weight, deploy the new version to Green:
 ```bash
-helm upgrade <release-name> . --set apps[0].blueGreen.green.tag=v2.0.0
+helm upgrade test . -n demo --set apps.demo.blueGreen.green.tag=v2.0.0
 ```
 
 ### 2. Verify on Same URL (Canary/Gradual Rollout)
-Shift a small percentage of traffic to the new version to test it "live" on the production URL:
+Shift a small percentage of traffic to the new version to test it "live":
 ```bash
 # gateway.listeners[0].routes[0].backendRefs[0] -> Blue
 # gateway.listeners[0].routes[0].backendRefs[1] -> Green
-helm upgrade <release-name> . \
+helm upgrade test . -n demo \
   --set gateway.listeners[0].routes[0].backendRefs[0].weight=90 \
   --set gateway.listeners[0].routes[0].backendRefs[1].weight=10
 ```
@@ -56,13 +61,13 @@ helm upgrade <release-name> . \
 ### 3. Full Cutover
 Once satisfied, move 100% of the traffic to the new version:
 ```bash
-helm upgrade <release-name> . \
+helm upgrade test . -n demo \
   --set gateway.listeners[0].routes[0].backendRefs[0].weight=0 \
   --set gateway.listeners[0].routes[0].backendRefs[1].weight=100
 ```
 
-## Benefits
+## Benefits of the Map Structure
+- **Safe Overrides**: Using a map for `apps` prevents the "wipe issue" where `--set` on a list index replaces the entire object.
 - **Minimal Complexity**: Uses only two dedicated services for clear separation.
 - **Same URL Testing**: Validate new versions on the actual production domain.
 - **Zero Downtime**: Shifts happen at the networking layer without pod restarts.
-- **Simplified CI/CD**: Strictly value-driven rollout and rollback.

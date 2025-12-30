@@ -9,9 +9,8 @@ global:
 
 # Application Configuration
 apps:
-  - name: test
-    namespace: demo
-    app: test
+  demo:
+    name: demo
     replicas: 1
 
     blueGreen:
@@ -96,7 +95,6 @@ apps:
 gateway: 
   enabled: true
   name: gateway
-  namespace: demo
 
   clientSettings:
     name: gateway-client-settings
@@ -110,19 +108,19 @@ gateway:
         - path: /grpc
           pathType: PathPrefix
           backendRefs:
-            - name: test-blue
+            - name: demo-blue
               port: 50051
               weight: 100
-            - name: test-green
+            - name: demo-green
               port: 50051
               weight: 0
         - path: /
           pathType: PathPrefix
           backendRefs:
-            - name: test-blue
+            - name: demo-blue
               port: 80
               weight: 100
-            - name: test-green
+            - name: demo-green
               port: 80
               weight: 0
 

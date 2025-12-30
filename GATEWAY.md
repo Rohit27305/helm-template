@@ -102,7 +102,6 @@ Configure the Gateway in `values.yaml` under the `gateway` section.
 gateway:
   enabled: true
   name: demo-gateway
-  namespace: demo
 ```
 
 ### 2. Define Listeners & Routes
@@ -118,13 +117,13 @@ gateway:
       tls: tls-secret-name
       sslRedirect: true      # Enables HTTP -> HTTPS redirection
       
-      # Routing Rules (for HTTPS traffic)
       routes:
         - path: /v1
           pathType: PathPrefix
-          backend:
-            service: my-service
-            port: 80
+          backendRefs:
+            - name: my-service
+              port: 80
+              weight: 100
 ```
 
 ### 3. Advanced Proxy Settings
@@ -148,7 +147,8 @@ gateway:
 | `clientSettings` | Configuration for `ClientSettingsPolicy` (e.g., `maxSize` for body size). |
 | `routes` | List of routing rules attached to this listener. |
 | `path` | URL path to match (e.g., `/api`). |
-| `backend.service` | Name of the Kubernetes Service to forward traffic to. |
+| `backendRefs` | List of backend services and their weights (used for Blue-Green/Canary). |
+| `backendRefs[].name` | Name of the Kubernetes Service to forward traffic to. |
 
 ## ✅ Verification
 
