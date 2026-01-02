@@ -211,7 +211,9 @@ For detailed instructions and operational workflows, see [BLUE_GREEN.md](BLUE_GR
 
 ### RBAC Configuration
 
-Manage permissions and service accounts for both namespace and cluster levels using separate identity:
+Manage permissions and service accounts for both namespace and cluster levels using separate identity. This chart supports a dual-ServiceAccount strategy for enhanced security.
+
+For detailed documentation, architecture, and advanced configuration, see [RBAC.md](RBAC.md).
 
 ```yaml
 rbac:
@@ -227,7 +229,7 @@ rbac:
         verbs: ["get", "list"]
         
   cluster:
-    enabled: false
+    enabled: true
     serviceAccountName: rbac-cluster-sa
     roleName: my-cluster-role
     rules:
