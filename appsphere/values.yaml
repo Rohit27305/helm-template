@@ -19,7 +19,7 @@ apps:
 
     # Blue Green
     blueGreen:
-      enabled: true
+      enabled: false
       blue:
         tag: blue
       green:
