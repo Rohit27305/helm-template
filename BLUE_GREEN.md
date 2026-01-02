@@ -37,9 +37,9 @@ apps:
 
 ---
 
-## 🏗️ How it Works
-
-1.  **Dual Deployments**: Two distinct deployments are created (`demo-blue`, `demo-green`).
+1.  **Dual Deployments**: Two distinct deployments are created:
+    *   🔵 **Blue**: Shares the base application name (`demo`) to ensure smooth transition and persistent NodePorts.
+    *   🟢 **Green**: Named with a suffix (`demo-green`) for side-by-side testing.
 2.  **Dedicated Services**: Both slots receive unique internal services for direct testing.
 3.  **Gateway API Integration**: The `HTTPRoute` leverages `backendRefs` with weights to split incoming traffic.
 

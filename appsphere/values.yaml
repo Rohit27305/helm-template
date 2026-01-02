@@ -19,7 +19,7 @@ apps:
 
     # Blue Green
     blueGreen:
-      enabled: false
+      enabled: true
       blue:
         tag: blue
       green:
@@ -64,7 +64,7 @@ gateway:
         - path: /grpc
           pathType: PathPrefix
           backendRefs:
-            - name: demo-blue
+            - name: demo
               port: 50051
               weight: 100
             - name: demo-green
@@ -73,7 +73,7 @@ gateway:
         - path: /
           pathType: PathPrefix
           backendRefs:
-            - name: demo-blue
+            - name: demo
               port: 80
               weight: 100
             - name: demo-green

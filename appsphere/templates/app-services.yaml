@@ -8,8 +8,8 @@
 
 {{- range $slot := $slots }}
 {{- $name := $app.name }}
-{{- if $slot }}
-  {{- $name = printf "%s-%s" $app.name $slot }}
+{{- if eq $slot "green" }}
+  {{- $name = printf "%s-green" $app.name }}
 {{- end }}
 ---
 apiVersion: v1

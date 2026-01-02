@@ -172,7 +172,7 @@ helm test my-release -n qa
 > **Strict Naming**: Always define `app.name` and `app.tag` for every service. The chart relies on these for consistent labeling and image resolution.
 
 *   **Resources**: Always define `requests` for CPU to enable the HPA functionality.
-*   **BG Weights**: In Blue-Green mode, manage weights directly in `gateway.listeners[].routes[].backendRefs`.
+*   **BG Weights**: In Blue-Green mode, manage weights directly in the `gateway` section. Note that the **Blue** slot shares the base `app.name` to ensure NodePort stability and prevent allocation conflicts.
 *   **Dictionary Logic**: Use `--set apps.myapp.tag=...` instead of index-based arrays to prevent configuration wipes.
 
 ---

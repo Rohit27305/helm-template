@@ -9,9 +9,11 @@
 {{- range $slot := $slots }}
 {{- $name := $app.name }}
 {{- $tag := $app.tag }}
-{{- if $slot }}
-  {{- $name = printf "%s-%s" $app.name $slot }}
-  {{- $tag = index $app.blueGreen $slot "tag" | default $app.tag }}
+{{- if eq $slot "green" }}
+  {{- $name = printf "%s-green" $app.name }}
+  {{- $tag = index $app.blueGreen "green" "tag" | default $app.tag }}
+{{- else if eq $slot "blue" }}
+  {{- $tag = index $app.blueGreen "blue" "tag" | default $app.tag }}
 {{- end }}
 ---
 apiVersion: apps/v1
