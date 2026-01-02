@@ -31,6 +31,8 @@ apps:
 
 > [!NOTE]
 > Weights are managed at the **Gateway** level for precise traffic control across the shared hostname.
+> 
+> **NodePort Handling**: To avoid port conflicts when Blue-Green is enabled, the **blue** slot uses the static `nodePort` from `values.yaml`, while the **green** slot is **auto-assigned** a random host port by Kubernetes.
 
 ### How it works
 

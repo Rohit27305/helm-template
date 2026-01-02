@@ -203,6 +203,7 @@ The chart supports **Blue-Green & Canary** deployments using the Gateway API. Th
 
 - **Configuration**: Managed in `values.yaml` under each app's `blueGreen` section.
 - **Traffic Shifting**: Controlled via `gateway.listeners[].routes[].backendRefs[].weight`.
+- **NodePort Handling**: To avoid conflicts, when Blue-Green is enabled, the **blue** slot uses the static `nodePort` from `values.yaml`, while the **green** slot is **auto-assigned** a random port. When disabled, the base delivery uses the static ports.
 - **Robustness**: If Blue-Green is disabled, all resources (Deployments, Services, HPA, PDB) are created using the base `name`.
 - **Precedence**: In BG mode, the slot-specific `tag` is used; if missing, it falls back to the app-level `tag`.
 

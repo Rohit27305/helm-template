@@ -31,7 +31,7 @@ spec:
       protocol: TCP
       port: {{ $app.ports.port }}
       targetPort: {{ $app.ports.targetPort | default $app.ports.port }}
-      {{- if and $app.ports $app.ports.nodePort }}
+      {{- if and $app.ports.nodePort (or (not $slot) (eq $slot "blue")) }}
       nodePort: {{ $app.ports.nodePort }}
       {{- end }}
     {{- if $app.ports.grpcPort }}
@@ -39,7 +39,7 @@ spec:
       protocol: TCP
       port: {{ $app.ports.grpcPort }}
       targetPort: {{ $app.ports.grpcTargetPort | default $app.ports.grpcPort }}
-      {{- if and $app.ports $app.ports.grpcNodePort }}
+      {{- if and $app.ports.grpcNodePort (or (not $slot) (eq $slot "blue")) }}
       nodePort: {{ $app.ports.grpcNodePort }}
       {{- end }}
     {{- end }}
