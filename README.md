@@ -111,7 +111,7 @@ apps:
     
     # Image Details
     imageName: my-service-image
-    tag: v1.0.0
+    tag: v1.0.0            # Required: Used if Blue-Green is disabled or as fallback
     
     # Networking
     ports:

@@ -13,6 +13,11 @@ apps:
     name: demo
     replicas: 1
 
+    # Image
+    imageName: test
+    tag: blue     # if blueGreen is not available or disabled
+
+    # Blue Green
     blueGreen:
       enabled: true
       blue:
@@ -20,8 +25,6 @@ apps:
       green:
         tag: green
 
-    # Image
-    imageName: test
 
     # Ports
     ports:
@@ -90,6 +93,30 @@ apps:
     pdb:
       enabled: true
       minAvailable: 1
+
+
+  test2:
+    name: test2
+    replicas: 1
+
+    # Image
+    imageName: test
+    tag: blue     # if blueGreen is not available or disabled
+
+    # Ports
+    ports:
+      port: 80
+      targetPort: 80
+
+    # Resources
+    resources:
+      requests:
+        memory: "128Mi"
+        cpu: "100m"
+      limits:
+        memory: "256Mi"
+        cpu: "200m"
+
 
 # Gateway Configuration
 gateway: 

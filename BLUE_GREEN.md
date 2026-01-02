@@ -16,6 +16,10 @@ The configuration is managed in `values.yaml` under each app's `blueGreen` secti
 ```yaml
 apps:
   demo:  # 'demo' is the map key
+    # Image
+    imageName: test
+    tag: v1.0.0  # Optional fallback: used if slot tags are missing or BG is disabled
+
     blueGreen:
       enabled: true
       blue:
