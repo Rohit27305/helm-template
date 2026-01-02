@@ -1,5 +1,5 @@
 {{- range $appName, $appValues := .Values.apps }}
-{{- if $appValues.service }}
+{{- if and $appValues.name $appValues.ports }}
 {{- $app := $appValues }}
 {{- $slots := list "" }}
 {{- if and $app.blueGreen $app.blueGreen.enabled }}
@@ -20,6 +20,9 @@ metadata:
   labels:
     {{- include "appshpere.labels" $ | nindent 4 }}
     app: {{ $app.name }}
+    {{- if $slot }}
+    slot: {{ $slot }}
+    {{- end }}
 spec:
   selector:
     app: {{ $name }}
@@ -28,7 +31,7 @@ spec:
       protocol: TCP
       port: {{ $app.ports.port }}
       targetPort: {{ $app.ports.targetPort | default $app.ports.port }}
-      {{- if $app.ports.nodePort }}
+      {{- if and $app.ports $app.ports.nodePort }}
       nodePort: {{ $app.ports.nodePort }}
       {{- end }}
     {{- if $app.ports.grpcPort }}
@@ -36,11 +39,11 @@ spec:
       protocol: TCP
       port: {{ $app.ports.grpcPort }}
       targetPort: {{ $app.ports.grpcTargetPort | default $app.ports.grpcPort }}
-      {{- if $app.ports.grpcNodePort }}
+      {{- if and $app.ports $app.ports.grpcNodePort }}
       nodePort: {{ $app.ports.grpcNodePort }}
       {{- end }}
     {{- end }}
-  type: {{ $app.service.type | default "ClusterIP" }}
+  type: {{ if $app.service }}{{ $app.service.type | default "ClusterIP" }}{{- end}}
 {{- end }}
 {{- end }}
 {{- end }}

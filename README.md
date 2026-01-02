@@ -102,16 +102,17 @@ global:
 
 ### Application Configuration
 
-Configure individual applications in the `apps` dictionary. The map key is used as the default application name and label.
+Configure individual applications in the `apps` dictionary. **Note**: `app.name` and `app.tag` are strictly required and do not have global fallbacks.
 
 ```yaml
 apps:
   my-service:
+    name: my-app-name      # Required: Strictly used for naming and labeling
     replicas: 1
     
     # Image Details
     imageName: my-service-image
-    tag: v1.0.0            # Required: Used if Blue-Green is disabled or as fallback
+    tag: v1.0.0            # Required: Strictly used for image tagging (no global default)
     
     # Networking
     ports:
@@ -155,10 +156,9 @@ apps:
       maxReplicas: 5
       targetCPUUtilizationPercentage: 80
 
-    # Availability (PDB)
-    pdb:
-      enabled: true
-      minAvailable: 1
+    # Service
+    service:
+      type: NodePort       # Optional: Defaults to "ClusterIP" if omitted
 ```
 
 ### Gateway Configuration
@@ -203,7 +203,8 @@ The chart supports **Blue-Green & Canary** deployments using the Gateway API. Th
 
 - **Configuration**: Managed in `values.yaml` under each app's `blueGreen` section.
 - **Traffic Shifting**: Controlled via `gateway.listeners[].routes[].backendRefs[].weight`.
-- **Fallback Logic**: If Blue-Green is disabled, the deployment uses the app-level `tag`. If the slot-specific `tag` is missing, it also falls back to the app-level `tag`.
+- **Robustness**: If Blue-Green is disabled, all resources (Deployments, Services, HPA, PDB) are created using the base `name`.
+- **Precedence**: In BG mode, the slot-specific `tag` is used; if missing, it falls back to the app-level `tag`.
 
 For detailed instructions and operational workflows, see [BLUE_GREEN.md](BLUE_GREEN.md).
 

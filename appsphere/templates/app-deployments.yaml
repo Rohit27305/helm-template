@@ -11,7 +11,7 @@
 {{- $tag := $app.tag }}
 {{- if $slot }}
   {{- $name = printf "%s-%s" $app.name $slot }}
-  {{- $tag = index $app.blueGreen $slot "tag" }}
+  {{- $tag = index $app.blueGreen $slot "tag" | default $app.tag }}
 {{- end }}
 ---
 apiVersion: apps/v1
@@ -43,6 +43,9 @@ spec:
     metadata:
       labels:
         app: {{ $name }}
+        {{- if $slot }}
+        slot: {{ $slot }}
+        {{- end }}
         app.kubernetes.io/name: {{ $name }}-pod
     spec:
       {{- if $app.podSecurityContext }}
@@ -84,7 +87,7 @@ spec:
           readinessProbe:
             {{- toYaml $app.readinessProbe | nindent 12 }}
           {{- end }}
-          {{- if and $app.startupProbe $app.startupProbe.enabled }}
+          {{- if $app.startupProbe }}
           startupProbe:
             {{- toYaml $app.startupProbe | nindent 12 }}
           {{- end }}

@@ -1,5 +1,5 @@
 {{- range $appName, $appValues := .Values.apps }}
-{{- if and $appValues.hpa $appValues.hpa.enabled }}
+{{- if and $appValues.name $appValues.hpa $appValues.hpa.enabled }}
 {{- $app := $appValues }}
 {{- $slots := list "" }}
 {{- if and $app.blueGreen $app.blueGreen.enabled }}
@@ -20,6 +20,9 @@ metadata:
   labels:
     {{- include "appshpere.labels" $ | nindent 4 }}
     app: {{ $app.name }}
+    {{- if $slot }}
+    slot: {{ $slot }}
+    {{- end }}
 spec:
   scaleTargetRef:
     apiVersion: apps/v1

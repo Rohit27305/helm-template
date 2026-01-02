@@ -148,7 +148,7 @@ gateway:
 | `routes` | List of routing rules attached to this listener. |
 | `path` | URL path to match (e.g., `/api`). |
 | `backendRefs` | List of backend services and their weights (used for Blue-Green/Canary). |
-| `backendRefs[].name` | Name of the Kubernetes Service to forward traffic to. |
+| `backendRefs[].name` | Name of the Kubernetes Service to forward traffic to (must match `app.name`, or `app.name-blue`/`app.name-green`). |
 
 ## ✅ Verification
 

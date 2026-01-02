@@ -1,5 +1,5 @@
 {{- range $appName, $appValues := .Values.apps }}
-{{- if and $appValues.pdb $appValues.pdb.enabled }}
+{{- if and $appValues.name $appValues.pdb $appValues.pdb.enabled }}
 {{- $app := $appValues }}
 {{- $slots := list "" }}
 {{- if and $app.blueGreen $app.blueGreen.enabled }}
@@ -20,6 +20,9 @@ metadata:
   labels:
     {{- include "appshpere.labels" $ | nindent 4 }}
     app: {{ $app.name }}
+    {{- if $slot }}
+    slot: {{ $slot }}
+    {{- end }}
 spec:
   minAvailable: {{ $app.pdb.minAvailable | default 1 }}
   selector:
