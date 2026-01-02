@@ -1,34 +1,49 @@
-{{- range .Values.apps }}
-{{- if .service }}
+{{- range $appName, $appValues := .Values.apps }}
+{{- if and $appValues.name $appValues.ports }}
+{{- $app := $appValues }}
+{{- $slots := list "" }}
+{{- if and $app.blueGreen $app.blueGreen.enabled }}
+  {{- $slots = list "blue" "green" }}
+{{- end }}
+
+{{- range $slot := $slots }}
+{{- $name := $app.name }}
+{{- if eq $slot "green" }}
+  {{- $name = printf "%s-green" $app.name }}
+{{- end }}
 ---
 apiVersion: v1
 kind: Service
 metadata:
-  name: {{ .name }}
-  namespace: {{ .namespace | default $.Values.global.namespace }}
+  name: {{ $name }}
+  namespace: {{ $.Values.global.namespace }}
   labels:
     {{- include "appshpere.labels" $ | nindent 4 }}
-    app: {{ .app }}
+    app: {{ $app.name }}
+    {{- if $slot }}
+    slot: {{ $slot }}
+    {{- end }}
 spec:
   selector:
-    app: {{ .name }}
+    app: {{ $name }}
   ports:
     - name: http-port
       protocol: TCP
-      port: {{ .ports.port }}
-      targetPort: {{ .ports.targetPort | default .ports.port }}
-      {{- if .ports.nodePort }}
-      nodePort: {{ .ports.nodePort }}
+      port: {{ $app.ports.port }}
+      targetPort: {{ $app.ports.targetPort | default $app.ports.port }}
+      {{- if and $app.ports.nodePort (or (not $slot) (eq $slot "blue")) }}
+      nodePort: {{ $app.ports.nodePort }}
       {{- end }}
-    {{- if .ports.grpcPort }}
+    {{- if $app.ports.grpcPort }}
     - name: grpc-port
       protocol: TCP
-      port: {{ .ports.grpcPort }}
-      targetPort: {{ .ports.grpcTargetPort | default .ports.grpcPort }}
-      {{- if .ports.grpcNodePort }}
-      nodePort: {{ .ports.grpcNodePort }}
+      port: {{ $app.ports.grpcPort }}
+      targetPort: {{ $app.ports.grpcTargetPort | default $app.ports.grpcPort }}
+      {{- if and $app.ports.grpcNodePort (or (not $slot) (eq $slot "blue")) }}
+      nodePort: {{ $app.ports.grpcNodePort }}
       {{- end }}
     {{- end }}
-  type: {{ .service.type | default "ClusterIP" }}
+  type: {{ if $app.service }}{{ $app.service.type | default "ClusterIP" }}{{- end}}
+{{- end }}
 {{- end }}
 {{- end }}

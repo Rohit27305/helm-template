@@ -1,76 +1,63 @@
-# Gateway API Implementation
+# 🌐 AppSphere: Gateway API Implementation Guide
 
-This chart utilizes the **Kubernetes Gateway API**, the next generation of Kubernetes networking that enables more expressive, extensible, and role-oriented service networking compared to the legacy Ingress API.
+This guide covers the modern networking architecture of the AppSphere chart, utilizing the **Kubernetes Gateway API** to provide expressive, role-oriented, and extensible service networking.
+
+---
 
 ## 🌟 Why Gateway API?
 
-- **Role-Oriented**: Clearly separates responsibilities between Cluster Operators (managing Gateways) and Application Developers (managing Routes).
-- **Expressive**: Native support for advanced routing (header matching, traffic splitting) without relying on annotations.
-- **Extensible**: Designed to be extended by custom resources and filters.
+*   **Role-Oriented**: Clearly separates responsibilities between Cluster Operators (Gateways) and Application Developers (Routes).
+*   **Expressive Native Controls**: Built-in support for header matching, traffic splitting, and weighted backends without complex annotations.
+*   **Future-Proof**: The evolved successor to the legacy Ingress API.
+
+---
 
 ## 🏗️ Prerequisites: Gateway Controller
 
-This chart relies on a Gateway Controller to provision the underlying load balancer infrastructure. We recommend the **NGINX Gateway Fabric** as the default controller.
+This chart requires a Gateway Controller to provision the underlying load balancer. We recommend **NGINX Gateway Fabric**.
 
-### Installing NGINX Gateway Controller
+### 📥 Installation Steps
 
 1.  **Install Gateway API CRDs**:
     ```bash
     kubectl apply -f https://github.com/kubernetes-sigs/gateway-api/releases/download/v1.0.0/standard-install.yaml
     ```
 
-2.  **Install NGINX Gateway Fabric**:
+2.  **Install NGINX Gateway Controller**:
     ```bash
     helm install nginx-gateway oci://ghcr.io/nginxinc/charts/nginx-gateway-fabric --create-namespace -n nginx-gateway
     ```
 
-3.  **Verify Installation**:
-    ensure the GatewayClass is available:
+3.  **Verify GatewayClass**:
     ```bash
-    kubectl get gatewayclass
-    # Output should show 'nginx'
+    kubectl get gatewayclass  # Output should show 'nginx'
     ```
 
-## 📂 Project Structure
+---
 
-Verified chart structure for Gateway implementation:
+## 📂 Chart Structure
 
-```
-├── appsphere
+Verified chart structure for AppSphere Gateway implementation:
+
+```text
+├── appsphere/
 │   ├── Chart.yaml
-│   ├── templates
-│   │   ├── app-deployments.yaml
-│   │   ├── app-services.yaml
-│   │   ├── gateway-client-setting.yaml
+│   ├── templates/
 │   │   ├── gateway.yaml
-│   │   ├── _helpers.tpl
-│   │   ├── hpa.yaml
-│   │   ├── http-redirect.yaml
 │   │   ├── http-route.yaml
-│   │   ├── NOTES.txt
-│   │   ├── pdb.yaml
-│   │   ├── rbac-sa-token.yaml
-│   │   ├── rolebinding.yaml
-│   │   ├── role.yaml
-│   │   ├── serviceaccount.yaml
-│   │   └── tests
-│   │       └── test-connection.yaml
-│   ├── values
-│   │   ├── integration-values.yaml
-│   │   ├── prod-values.yaml
-│   │   └── qa-values.yaml
+│   │   └── ...
+│   ├── values/
 │   └── values.yaml
-├── GATEWAY.md
-└── README.md
+└── scripts/
+    ├── generate-kubeconfig.sh
+    └── setup-user.sh
 ```
 
-## 🔄 Workflow & Architecture
+---
 
-The Gateway API functions through a clear hierarchy of resources:
+## 🔄 Traffic Flow Architecture
 
-1.  **GatewayClass**: Defines the controller implementation (e.g., `nginx`, `istio`).
-2.  **Gateway**: Represents the load balancer infrastructure. It defines **Listeners** (ports and protocols).
-3.  **HTTPRoute**: Defines the routing logic. It attaches to a **Gateway Listener** and forwards traffic to **Backend Services**.
+The Gateway API functions through a modular hierarchy of resources:
 
 ```mermaid
 graph TD
@@ -88,12 +75,14 @@ graph TD
     end
     
     subgraph "Backend Services"
-        RouteHTTPS --> Svc1[Backend Service 1]
-        RouteHTTPS --> Svc2[Backend Service 2]
+        RouteHTTPS --> Svc1[Backend Service 🔵]
+        RouteHTTPS --> Svc2[Backend Service 🟢]
     end
 ```
 
-## 🛠️ Setup & Configuration
+---
+
+## ⚙️ Configuration
 
 Configure the Gateway in `values.yaml` under the `gateway` section.
 
@@ -102,12 +91,10 @@ Configure the Gateway in `values.yaml` under the `gateway` section.
 gateway:
   enabled: true
   name: demo-gateway
-  namespace: demo
 ```
 
 ### 2. Define Listeners & Routes
-
-This chart uses a centralized configuration model where routes are defined directly under their respective listeners.
+Routes are defined directly under their respective listeners for centralized management.
 
 ```yaml
 gateway:
@@ -118,46 +105,31 @@ gateway:
       tls: tls-secret-name
       sslRedirect: true      # Enables HTTP -> HTTPS redirection
       
-      # Routing Rules (for HTTPS traffic)
       routes:
         - path: /v1
           pathType: PathPrefix
-          backend:
-            service: my-service
-            port: 80
+          backendRefs:
+            - name: my-service
+              port: 80
+              weight: 100
 ```
 
-### 3. Advanced Proxy Settings
-The chart supports `ClientSettingsPolicy` (specifically for NGINX Gateway Fabric) to configure low-level proxy settings like request body size.
+---
 
-```yaml
-gateway:
-  clientSettings:
-    enabled: true
-    name: gateway-client-settings
-    maxSize: "50"  # Set max body size (e.g., 50m)
-```
+## ✅ Verification & Debugging
 
-### 4. Key Fields Explained
-
-| Field | Description |
-|-------|-------------|
-| `host` | The hostname to listen for (e.g., `api.example.com`). Matches specific `HTTPRoutes`. |
-| `tls` | Name of the Kubernetes Secret containing the TLS certificate. |
-| `sslRedirect` | Boolean. If true, traffic on port 80 for this host is redirected to HTTPS. |
-| `clientSettings` | Configuration for `ClientSettingsPolicy` (e.g., `maxSize` for body size). |
-| `routes` | List of routing rules attached to this listener. |
-| `path` | URL path to match (e.g., `/api`). |
-| `backend.service` | Name of the Kubernetes Service to forward traffic to. |
-
-## ✅ Verification
-
-After deployment, verify the Gateway status:
+Verify the status of your networking stack:
 
 ```bash
-# Check if Gateway is programmed and ready
+# 1. Check if Gateway is programmed and ready
 kubectl get gateway -n <namespace>
 
-# Check if HTTPRoutes are accepted
+# 2. Check if HTTPRoutes are accepted by the controller
 kubectl get httproute -n <namespace>
+
+# 3. View detailed status and events
+kubectl describe gateway <gateway-name> -n <namespace>
 ```
+
+> [!TIP]
+> **Status Conditions**: Always look for `Ready: True` and `Programmed: True` in the status of the Gateway resource. If `Programmed` is false, check your controller logs.

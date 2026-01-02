@@ -1,22 +1,33 @@
-{{- range .Values.apps }}
-{{- if and .pdb .pdb.enabled }}
+{{- range $appName, $appValues := .Values.apps }}
+{{- if and $appValues.name $appValues.pdb $appValues.pdb.enabled }}
+{{- $app := $appValues }}
+{{- $slots := list "" }}
+{{- if and $app.blueGreen $app.blueGreen.enabled }}
+  {{- $slots = list "blue" "green" }}
+{{- end }}
+
+{{- range $slot := $slots }}
+{{- $name := $app.name }}
+{{- if eq $slot "green" }}
+  {{- $name = printf "%s-green" $app.name }}
+{{- end }}
 ---
 apiVersion: policy/v1
 kind: PodDisruptionBudget
 metadata:
-  name: {{ .name }}-pdb
-  namespace: {{ .namespace | default $.Values.global.namespace }}
+  name: {{ $name }}-pdb
+  namespace: {{ $.Values.global.namespace }}
   labels:
     {{- include "appshpere.labels" $ | nindent 4 }}
+    app: {{ $app.name }}
+    {{- if $slot }}
+    slot: {{ $slot }}
+    {{- end }}
 spec:
-  {{- if .pdb.minAvailable }}
-  minAvailable: {{ .pdb.minAvailable }}
-  {{- end }}
-  {{- if .pdb.maxUnavailable }}
-  maxUnavailable: {{ .pdb.maxUnavailable }}
-  {{- end }}
+  minAvailable: {{ $app.pdb.minAvailable | default 1 }}
   selector:
     matchLabels:
-      app: {{ .name }}
+      app: {{ $name }}
+{{- end }}
 {{- end }}
 {{- end }}

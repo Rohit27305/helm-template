@@ -9,14 +9,30 @@ global:
 
 # Application Configuration
 apps:
-  - name: test-blue
-    namespace: demo
-    app: test
+  demo:
+    name: demo
     replicas: 1
 
     # Image
     imageName: test
-    tag: blue  
+    tag: blue     # if blueGreen is not available or disabled
+
+    # Blue Green
+    blueGreen:
+      enabled: true
+      blue:
+        tag: blue
+      green:
+        tag: green
+
+    # Resources & Auto-scaling
+    resources:
+      requests:
+        memory: "128Mi"
+        cpu: "100m"
+      limits:
+        memory: "256Mi"
+        cpu: "200m"
 
     # Ports
     ports:
@@ -27,115 +43,14 @@ apps:
       grpcTargetPort: 50051
       grpcNodePort: 31425
 
-    # Environment
-    envFrom: []
-    env: []
-    command: []
-
-    # Probes
-    livenessProbe:
-      httpGet:
-        path: /
-        port: 80
-      initialDelaySeconds: 15
-      periodSeconds: 20
-    readinessProbe:
-      httpGet:
-        path: /
-        port: 80
-      initialDelaySeconds: 5
-      periodSeconds: 10
-    startupProbe:
-      enabled: false
-      failureThreshold: 30
-      periodSeconds: 10
-      initialDelaySeconds: 10
-      timeoutSeconds: 5
-      httpGet:
-        path: /
-        port: 80
-
-    # Resources
-    resources:
-      enabled: true
-      requests:
-        memory: "128Mi"
-        cpu: "100m"
-      limits:
-        memory: "256Mi"
-        cpu: "200m"
-
-    # # Security Context
-    # podSecurityContext:
-    #   runAsUser: 1000
-    #   runAsGroup: 3000
-    #   fsGroup: 2000
-    # securityContext:
-    #   capabilities:
-    #     drop:
-    #     - ALL
-    #   readOnlyRootFilesystem: true
-    #   runAsNonRoot: true
-    #   allowPrivilegeEscalation: false
-    
-    # Scheduling
-    nodeSelector: {}
-    tolerations: []
-    affinity: {}
-
     # Service
     service:
       type: NodePort
-
-    # HPA
-    hpa:
-      enabled: false
-      minReplicas: 2
-      maxReplicas: 5
-      targetCPUUtilizationPercentage: 80
-      targetMemoryUtilizationPercentage: 80
-
-    # PDB
-    pdb:
-      enabled: true
-      minAvailable: 1
-
-  - name: test-green 
-    namespace: demo
-    ports:
-      port: 80
-      targetPort: 80
-    app: test
-    replicas: 1
-    imageName: test
-    tag: green  
-    envFrom: []
-    env: []
-    command:
-    startupProbe:
-      enabled: false
-    resources:
-      enabled: false
-      requests:
-        memory: "128Mi"
-        cpu: "100m"
-      limits:
-        memory: "256Mi"
-        cpu: "200m"
-    service:
-      type: ClusterIP
-    hpa:
-      enabled: false
-      minReplicas: 2
-      maxReplicas: 5
-      targetCPUUtilizationPercentage: 80
-      targetMemoryUtilizationPercentage: 80
 
 # Gateway Configuration
 gateway: 
   enabled: true
   name: gateway
-  namespace: demo
 
   clientSettings:
     name: gateway-client-settings
@@ -148,29 +63,50 @@ gateway:
       routes:
         - path: /grpc
           pathType: PathPrefix
-          backend:
-            service: test-blue
-            port: 50051
+          backendRefs:
+            - name: demo
+              port: 50051
+              weight: 100
+            - name: demo-green
+              port: 50051
+              weight: 0
         - path: /
           pathType: PathPrefix
-          backend:
-            service: test-blue
-            port: 80
-    - host: test-2.makunaiglobal.ai
-      tls: tls-secret
-      sslRedirect: true
-      routes:
-        - path: /
-          pathType: PathPrefix
-          backend:
-            service: test-green
-            port: 80
+          backendRefs:
+            - name: demo
+              port: 80
+              weight: 100
+            - name: demo-green
+              port: 80
+              weight: 0
 
 # RBAC Configuration
 rbac:
   enabled: true
-  serviceAccountName: rbac-sa
-  roleName: rbac-role
-  roleBindingName: rbac-binding
-  tokenSecretName: rbac-token
-  group: devusers
+  
+  # Namespace-level RBAC
+  namespace:
+    enabled: true
+    serviceAccountName: rbac-sa
+    tokenSecretName: rbac-token
+    roleName: rbac-role
+    roleBindingName: rbac-binding
+    rules:
+      - apiGroups: [""]
+        resources: ["pods", "services", "configmaps"]
+        verbs: ["get", "list", "watch"]
+      - apiGroups: ["apps"]
+        resources: ["deployments", "replicasets"]
+        verbs: ["get", "list", "watch"]
+
+  # Cluster-level RBAC
+  cluster:
+    enabled: true
+    serviceAccountName: rbac-cluster-sa
+    tokenSecretName: rbac-cluster-token
+    roleName: rbac-cluster-role
+    roleBindingName: rbac-cluster-binding
+    rules:
+      - apiGroups: [""]
+        resources: ["nodes", "namespaces"]
+        verbs: ["get", "list", "watch"]

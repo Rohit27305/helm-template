@@ -3,7 +3,7 @@ apiVersion: gateway.nginx.org/v1alpha1
 kind: ClientSettingsPolicy
 metadata:
   name: {{ .Values.gateway.clientSettings.name }}
-  namespace: {{ .Values.gateway.namespace }}
+  namespace: {{ $.Values.global.namespace }}
 spec:
   targetRef:
     group: gateway.networking.k8s.io

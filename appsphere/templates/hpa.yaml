@@ -1,34 +1,42 @@
-{{- range .Values.apps }}
-{{- if and .hpa .hpa.enabled }}
+{{- range $appName, $appValues := .Values.apps }}
+{{- if and $appValues.name $appValues.hpa $appValues.hpa.enabled }}
+{{- $app := $appValues }}
+{{- $slots := list "" }}
+{{- if and $app.blueGreen $app.blueGreen.enabled }}
+  {{- $slots = list "blue" "green" }}
+{{- end }}
+
+{{- range $slot := $slots }}
+{{- $name := $app.name }}
+{{- if eq $slot "green" }}
+  {{- $name = printf "%s-green" $app.name }}
+{{- end }}
 ---
 apiVersion: autoscaling/v2
 kind: HorizontalPodAutoscaler
 metadata:
-  name: {{ .name }}-hpa
-  namespace: {{ .namespace | default $.Values.global.namespace }}
+  name: {{ $name }}-hpa
+  namespace: {{ $.Values.global.namespace }}
   labels:
     {{- include "appshpere.labels" $ | nindent 4 }}
+    app: {{ $app.name }}
+    {{- if $slot }}
+    slot: {{ $slot }}
+    {{- end }}
 spec:
   scaleTargetRef:
     apiVersion: apps/v1
     kind: Deployment
-    name: {{ .name }}
-  minReplicas: {{ .hpa.minReplicas }}
-  maxReplicas: {{ .hpa.maxReplicas }}
+    name: {{ $name }}
+  minReplicas: {{ $app.hpa.minReplicas }}
+  maxReplicas: {{ $app.hpa.maxReplicas }}
   metrics:
     - type: Resource
       resource:
         name: cpu
         target:
           type: Utilization
-          averageUtilization: {{ .hpa.targetCPUUtilizationPercentage }}
-    {{- if .hpa.targetMemoryUtilizationPercentage }}
-    - type: Resource
-      resource:
-        name: memory
-        target:
-          type: Utilization
-          averageUtilization: {{ .hpa.targetMemoryUtilizationPercentage }}
-    {{- end }}
+          averageUtilization: {{ $app.hpa.targetCPUUtilizationPercentage }}
+{{- end }}
 {{- end }}
 {{- end }}
