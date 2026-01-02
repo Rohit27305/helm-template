@@ -117,7 +117,7 @@ rbac:
 
   # Cluster-level RBAC
   cluster:
-    enabled: false
+    enabled: true
     serviceAccountName: rbac-cluster-sa
     tokenSecretName: rbac-cluster-token
     roleName: rbac-cluster-role
