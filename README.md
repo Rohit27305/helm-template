@@ -163,7 +163,7 @@ apps:
 
 ### Gateway Configuration
 
-Configure ingress traffic using the Gateway API:
+Configure ingress traffic using the Kubernetes **Gateway API**. For a deep dive into the architecture, setup, and verification of the Gateway implementation, see the dedicated [GATEWAY.md](GATEWAY.md) guide.
 
 ```yaml
 gateway:
@@ -196,6 +196,16 @@ gateway:
               port: 50051
               weight: 100
 ```
+
+### Blue-Green Deployments
+
+The chart supports **Blue-Green & Canary** deployments using the Gateway API. This strategy creates two separate deployments (`-blue` and `-green`) and shifts traffic between them via weights.
+
+- **Configuration**: Managed in `values.yaml` under each app's `blueGreen` section.
+- **Traffic Shifting**: Controlled via `gateway.listeners[].routes[].backendRefs[].weight`.
+- **Fallback Logic**: If Blue-Green is disabled, the deployment uses the app-level `tag`. If the slot-specific `tag` is missing, it also falls back to the app-level `tag`.
+
+For detailed instructions and operational workflows, see [BLUE_GREEN.md](BLUE_GREEN.md).
 
 ### RBAC Configuration
 
