@@ -33,32 +33,6 @@ apps:
       limits:
         memory: "256Mi"
         cpu: "200m"
-    
-    hpa:
-      enabled: true
-      minReplicas: 2
-      maxReplicas: 10
-      targetCPUUtilizationPercentage: 70
-
-    # Probes
-    startupProbe:
-      httpGet:
-        path: /health
-        port: 80
-      failureThreshold: 30
-      periodSeconds: 10
-    livenessProbe:
-      httpGet:
-        path: /health
-        port: 80
-      initialDelaySeconds: 15
-      periodSeconds: 20
-    readinessProbe:
-      httpGet:
-        path: /ready
-        port: 80
-      initialDelaySeconds: 5
-      periodSeconds: 10
 
     # Ports
     ports:
@@ -69,42 +43,9 @@ apps:
       grpcTargetPort: 50051
       grpcNodePort: 31425
 
-    # Environment & Entrypoint
-    command: ["/app/server"]
-    env:
-      - name: DB_HOST
-        value: "db-service"
-    envFrom:
-      - configMapRef:
-          name: demo-config
-      - secretRef:
-          name: demo-secrets
-
-    # Security
-    podSecurityContext:
-      runAsUser: 1000
-    securityContext:
-      readOnlyRootFilesystem: true
-      allowPrivilegeEscalation: false
-      runAsNonRoot: true
-      capabilities:
-        drop:
-          - ALL
-
-    # Scheduling
-    nodeSelector:
-      kubernetes.io/os: linux
-    tolerations: []
-    affinity: {}
-
     # Service
     service:
       type: NodePort
-
-    # Pod Disruption Budget
-    pdb:
-      enabled: true
-      minAvailable: 1
 
 # Gateway Configuration
 gateway: 
