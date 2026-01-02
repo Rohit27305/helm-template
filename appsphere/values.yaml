@@ -99,8 +99,30 @@ gateway:
 # RBAC Configuration
 rbac:
   enabled: true
-  serviceAccountName: rbac-sa
-  roleName: rbac-role
-  roleBindingName: rbac-binding
-  tokenSecretName: rbac-token
-  group: devusers
+  
+  # Namespace-level RBAC
+  namespace:
+    enabled: true
+    serviceAccountName: rbac-sa
+    tokenSecretName: rbac-token
+    roleName: rbac-role
+    roleBindingName: rbac-binding
+    rules:
+      - apiGroups: [""]
+        resources: ["pods", "services", "configmaps"]
+        verbs: ["get", "list", "watch"]
+      - apiGroups: ["apps"]
+        resources: ["deployments", "replicasets"]
+        verbs: ["get", "list", "watch"]
+
+  # Cluster-level RBAC
+  cluster:
+    enabled: false
+    serviceAccountName: rbac-cluster-sa
+    tokenSecretName: rbac-cluster-token
+    roleName: rbac-cluster-role
+    roleBindingName: rbac-cluster-binding
+    rules:
+      - apiGroups: [""]
+        resources: ["nodes", "namespaces"]
+        verbs: ["get", "list", "watch"]

@@ -211,16 +211,29 @@ For detailed instructions and operational workflows, see [BLUE_GREEN.md](BLUE_GR
 
 ### RBAC Configuration
 
-Manage permissions and service accounts:
+Manage permissions and service accounts for both namespace and cluster levels using separate identity:
 
 ```yaml
 rbac:
   enabled: true
-  serviceAccountName: rbac-sa
-  roleName: rbac-role
-  roleBindingName: rbac-binding
-  tokenSecretName: rbac-token
-  group: devusers
+  
+  namespace:
+    enabled: true
+    serviceAccountName: rbac-sa
+    roleName: my-role
+    rules:
+      - apiGroups: [""]
+        resources: ["pods"]
+        verbs: ["get", "list"]
+        
+  cluster:
+    enabled: false
+    serviceAccountName: rbac-cluster-sa
+    roleName: my-cluster-role
+    rules:
+      - apiGroups: [""]
+        resources: ["nodes"]
+        verbs: ["get", "list"]
 ```
 
 ## Deployment
