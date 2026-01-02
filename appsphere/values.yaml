@@ -25,6 +25,40 @@ apps:
       green:
         tag: green
 
+    # Resources & Auto-scaling
+    resources:
+      requests:
+        memory: "128Mi"
+        cpu: "100m"
+      limits:
+        memory: "256Mi"
+        cpu: "200m"
+    
+    hpa:
+      enabled: true
+      minReplicas: 2
+      maxReplicas: 10
+      targetCPUUtilizationPercentage: 70
+
+    # Probes
+    startupProbe:
+      httpGet:
+        path: /health
+        port: 80
+      failureThreshold: 30
+      periodSeconds: 10
+    livenessProbe:
+      httpGet:
+        path: /health
+        port: 80
+      initialDelaySeconds: 15
+      periodSeconds: 20
+    readinessProbe:
+      httpGet:
+        path: /ready
+        port: 80
+      initialDelaySeconds: 5
+      periodSeconds: 10
 
     # Ports
     ports:
@@ -35,22 +69,31 @@ apps:
       grpcTargetPort: 50051
       grpcNodePort: 31425
 
-    # Environment
-    envFrom: []
-    env: []
-    command: []
+    # Environment & Entrypoint
+    command: ["/app/server"]
+    env:
+      - name: DB_HOST
+        value: "db-service"
+    envFrom:
+      - configMapRef:
+          name: demo-config
+      - secretRef:
+          name: demo-secrets
 
-    # Resources
-    resources:
-      requests:
-        memory: "128Mi"
-        cpu: "100m"
-      limits:
-        memory: "256Mi"
-        cpu: "200m"
+    # Security
+    podSecurityContext:
+      runAsUser: 1000
+    securityContext:
+      readOnlyRootFilesystem: true
+      allowPrivilegeEscalation: false
+      runAsNonRoot: true
+      capabilities:
+        drop:
+          - ALL
 
     # Scheduling
-    nodeSelector: {}
+    nodeSelector:
+      kubernetes.io/os: linux
     tolerations: []
     affinity: {}
 
@@ -58,7 +101,7 @@ apps:
     service:
       type: NodePort
 
-    # PDB
+    # Pod Disruption Budget
     pdb:
       enabled: true
       minAvailable: 1

@@ -56,6 +56,10 @@ spec:
         - name: {{ $name }}
           image: "{{ $.Values.global.image.registry }}/{{ $.Values.global.image.repository }}/{{ $app.imageName }}:{{ $tag }}"
           imagePullPolicy: {{ $.Values.global.image.pullPolicy }}
+          {{- if $app.securityContext }}
+          securityContext:
+            {{- toYaml $app.securityContext | nindent 12 }}
+          {{- end }}
           {{- if $app.ports }}
           ports:
             - containerPort: {{ $app.ports.targetPort | default $app.ports.port }}

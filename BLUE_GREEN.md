@@ -1,80 +1,78 @@
-# Blue-Green & Canary Deployment Strategy with Helm (Weighted)
+# 🔄 AppSphere: Blue-Green & Canary Deployment Strategy
 
-This document explains how the Blue-Green deployment strategy is implemented in this Helm chart using **weighted traffic shifting** via the Kubernetes Gateway API.
+This guide explains the implementation and operational workflows for **zero-downtime** deployments in the AppSphere chart, utilizing weighted traffic shifting via the Kubernetes Gateway API.
 
-## Strategy Overview
+---
 
-We maintain two environments, **Blue** (Stable) and **Green** (New/Canary). Instead of a hard switch, we use weights in the Gateway API to control how much traffic goes to each version on the **same URL**.
+## ✨ Strategy Overview
 
-- **Blue**: The currently stable version of the application.
-- **Green**: The new or canary version being rolled out.
+The chart maintains two parallel environments, **Blue** (Stable) and **Green** (New/Canary). Instead of a destructive "all-or-nothing" switch, we use weights in the Gateway API to control traffic distribution on the **same endpoint**.
 
-## Configuration
+*   🔵 **Blue**: The verified, stable version currently serving production traffic.
+*   🟢 **Green**: The candidate version being tested or gradually rolled out.
 
-The configuration is managed in `values.yaml` under each app's `blueGreen` section. Note that `apps` is a **dictionary (map)**, not a list.
+---
+
+## ⚙️ Configuration
+
+Blue-Green settings are managed per-application in `values.yaml`.
 
 ```yaml
 apps:
-  demo:  # 'demo' is the map key
-    name: demo   # Required: Strictly used for resource naming
-    # Image
-    imageName: test
-    tag: v1.0.0  # Required: Strictly used if slot tags are missing or BG is disabled
+  demo:
+    name: demo
+    imageName: test-app
+    tag: v1.0.0            # Fallback tag
 
     blueGreen:
       enabled: true
       blue:
-        tag: v1.0.0
+        tag: v1.0.0        # Current Live
       green:
-        tag: v2.0.0
+        tag: v2.0.0        # New Candidate
 ```
 
 > [!NOTE]
-> Weights are managed at the **Gateway** level for precise traffic control across the shared hostname.
-> 
-> **NodePort Handling**: To avoid port conflicts when Blue-Green is enabled, the **blue** slot uses the static `nodePort` from `values.yaml`, while the **green** slot is **auto-assigned** a random host port by Kubernetes.
+> **NodePort Handling**: To prevent conflicts, the **blue** slot uses the static `nodePort` from your configuration, while the **green** slot is **auto-assigned** a random host port by Kubernetes.
 
-### How it works
+---
 
-1. **Dual Deployments**: Two deployments are created: `demo-blue` and `demo-green`.
-2. **Dedicated Services**: 
-   - `demo-blue`: Direct access to Blue pods.
-   - `demo-green`: Direct access to Green pods.
-3. **Gateway API Integration**: The `HTTPRoute` splits traffic between `-blue` and `-green` services based on the **explicitly defined** weights in the `gateway.listeners[].routes[].backendRefs` section of `values.yaml`.
+## 🏗️ How it Works
 
-## How to Rollout (Production Workflow)
+1.  **Dual Deployments**: Two distinct deployments are created (`demo-blue`, `demo-green`).
+2.  **Dedicated Services**: Both slots receive unique internal services for direct testing.
+3.  **Gateway API Integration**: The `HTTPRoute` leverages `backendRefs` with weights to split incoming traffic.
 
-The best practice is to use `helm upgrade` with `--set` for CI/CD automation. 
+---
 
-> [!IMPORTANT]
-> Because `apps` is a dictionary, you must refer to the app name directly (e.g., `apps.demo`) instead of using an index like `apps[0]`. This ensures Helm **merges** your changes instead of wiping out the entire app configuration.
+## 🚀 Production Workflow (Manual)
 
-### 1. Deploy New Version to Inactive Slot
-If Blue is currently at 100% weight, deploy the new version to Green:
+### 1. Deploy to Inactive Slot
+Deploy the new version to Green while Blue serves 100% of traffic.
 ```bash
-helm upgrade test . -n demo --set apps.demo.blueGreen.green.tag=v2.0.0
+helm upgrade my-release ./appsphere --set apps.demo.blueGreen.green.tag=v2.0.0
 ```
 
-### 2. Verify on Same URL (Canary/Gradual Rollout)
-Shift a small percentage of traffic to the new version to test it "live":
+### 2. Gradual Canary Rollout
+Shift 10% of users to the new version to monitor stability.
 ```bash
-# gateway.listeners[0].routes[0].backendRefs[0] -> Blue
-# gateway.listeners[0].routes[0].backendRefs[1] -> Green
-helm upgrade test . -n demo \
+# Set weights: Blue=90, Green=10
+helm upgrade my-release ./appsphere \
   --set gateway.listeners[0].routes[0].backendRefs[0].weight=90 \
   --set gateway.listeners[0].routes[0].backendRefs[1].weight=10
 ```
 
 ### 3. Full Cutover
-Once satisfied, move 100% of the traffic to the new version:
+Switch 100% of traffic to Green.
 ```bash
-helm upgrade test . -n demo \
+helm upgrade my-release ./appsphere \
   --set gateway.listeners[0].routes[0].backendRefs[0].weight=0 \
   --set gateway.listeners[0].routes[0].backendRefs[1].weight=100
 ```
 
-## Benefits of the Map Structure
-- **Safe Overrides**: Using a map for `apps` prevents the "wipe issue" where `--set` on a list index replaces the entire object.
-- **Minimal Complexity**: Uses only two dedicated services for clear separation.
-- **Same URL Testing**: Validate new versions on the actual production domain.
-- **Zero Downtime**: Shifts happen at the networking layer without pod restarts.
+---
+
+## 💡 Key Benefits
+*   **Zero Downtime**: Shifts happen at the networking layer; no pod restarts are required for the "switch".
+*   **Safety**: If issues are detected, a single Helm command reverts traffic to the stable slot.
+*   **Validation**: Test the new version on the production URL with a small subset of traffic.

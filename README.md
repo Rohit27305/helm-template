@@ -1,304 +1,187 @@
-# Multi-Application Helm Chart
+# 🚀 AppSphere: Enterprise Multi-Application Helm Chart
 
-A comprehensive Helm chart designed for deploying and managing multiple microservices applications across different Kubernetes environments with consistent configuration and operational best practices.
+[![Helm Version](https://img.shields.io/badge/helm-v3.x-blue.svg)](https://helm.sh/)
+[![Kubernetes Version](https://img.shields.io/badge/kubernetes-v1.24+-green.svg)](https://kubernetes.io/)
+[![Gateway API](https://img.shields.io/badge/Networking-Gateway%20API-orange.svg)](https://gateway-api.sigs.k8s.io/)
 
-## Overview
+A professional-grade Helm chart designed for deploying and managing complex microservices architectures across diverse environments with consistency, security, and high availability.
 
-This Helm chart provides a flexible, scalable solution for deploying complex microservices architectures. It supports multiple application types including web services, user interfaces, and background workers, all managed through a unified configuration system using modern Kubernetes standards like the Gateway API.
+---
 
-## Architecture
+## 📖 Internal Documentation
 
-### Chart Structure
+Click on the links below to access detailed guides for specific features:
 
+| Guide | Description |
+| :--- | :--- |
+| 🌐 [**Gateway Guide**](GATEWAY.md) | Architecture and setup for modern Gateway API networking. |
+| 🔄 [**Blue-Green/Canary**](BLUE_GREEN.md) | Zero-downtime deployment strategies and traffic shifting. |
+| 🔒 [**RBAC Strategy**](RBAC.md) | Granular permission management with dual-ServiceAccounts. |
+| 📈 [**Autoscaling (HPA)**](HPA.md) | Dynamic scaling requirements and Metrics Server setup. |
+
+---
+
+## 🏗️ Chart Structure
+
+```text
+├── Chart.yaml
+├── templates
+│   ├── app-deployments.yaml
+│   ├── app-services.yaml
+│   ├── gateway-client-setting.yaml
+│   ├── gateway.yaml
+│   ├── _helpers.tpl
+│   ├── hpa.yaml
+│   ├── http-redirect.yaml
+│   ├── http-route.yaml
+│   ├── NOTES.txt
+│   ├── pdb.yaml
+│   ├── rbac-cluster.yaml
+│   ├── rbac-namespace.yaml
+│   ├── serviceaccount.yaml
+│   └── tests
+│       └── test-connection.yaml
+├── values
+│   ├── int-values.yaml
+│   ├── prd-values.yaml
+│   └── qa-values.yaml
+└── values.yaml
 ```
-├── appsphere
-│   ├── Chart.yaml
-│   ├── templates
-│   │   ├── app-deployments.yaml
-│   │   ├── app-services.yaml
-│   │   ├── gateway-client-setting.yaml
-│   │   ├── gateway.yaml
-│   │   ├── _helpers.tpl
-│   │   ├── hpa.yaml
-│   │   ├── http-redirect.yaml
-│   │   ├── http-route.yaml
-│   │   ├── NOTES.txt
-│   │   ├── pdb.yaml
-│   │   ├── rbac-sa-token.yaml
-│   │   ├── rolebinding.yaml
-│   │   ├── role.yaml
-│   │   ├── serviceaccount.yaml
-│   │   └── tests
-│   │       └── test-connection.yaml
-│   ├── values
-│   │   ├── integration-values.yaml
-│   │   ├── prod-values.yaml
-│   │   └── qa-values.yaml
-│   └── values.yaml
-├── GATEWAY.md
-├── BLUE_GREEN.md
-└── README.md
-```
 
-### Application Types
+---
 
-The chart supports three main application patterns:
+## ✨ Core Features
 
-1. **Web Services**: Backend API services with HTTP/gRPC endpoints
-2. **User Interfaces**: Frontend applications serving web content
-3. **Background Workers**: Asynchronous task processors and schedulers
+### 🌍 Networking & Traffic Management
+*   **Gateway API First**: Built-in support for the standard Gateway API (NGINX/Istio ready).
+*   **Intelligent Routing**: Path-based matching, header manipulation, and weighted traffic.
+*   **HTTPS Always**: Automatic SSL/TLS termination and HTTP-to-HTTPS redirection.
 
-## Features
+### 🛡️ Enterprise Security
+*   **Dual-SA RBAC**: Separate identities for Namespace and Cluster-level permissions.
+*   **Hardened Pods**: Configurable Pod/Container SecurityContexts for least privilege.
+*   **Secret Management**: Native support for image pull secrets and token generation.
 
-### 🚀 Multi-Environment Support
-- Environment-specific configurations
-- Namespace isolation
-- Different resource allocations per environment
+### � Scalability & Robustness
+*   **HPA Integration**: Automated scaling based on CPU utilization (Metrics Server required).
+*   **Blue-Green Native**: Native support for zero-downtime rollouts via `blue` and `green` slots.
+*   **High Availability**: Pod Disruption Budgets (PDB) ensure availability during maintenance.
 
-### 🌐 Networking & Gateway API
-- Modern **Gateway API** implementation (replacing legacy Ingress)
-- Centralized `Gateway` configuration
-- `HTTPRoute` for flexible routing rules
-- Multi-listener support (HTTP/HTTPS)
-- **Automatic HTTP to HTTPS Redirection**
-- **Blue-Green & Canary Deployments** via weighted traffic shifting
-- **Advanced Proxy Settings** (e.g., Request Body Size)
-- TLS termination
+---
 
-### 📈 Auto-Scaling & Resource Management
-- **Horizontal Pod Autoscaling (HPA)** with CPU and memory metrics
-- **Pod Disruption Budgets (PDB)** for high availability
-- Configurable resource requests and limits
-- Startup, Liveness, and Readiness probes
+## ⚙️ Configuration Overview
 
-### 🔒 Security & RBAC
-- Role-Based Access Control (RBAC) setup
-- Service account management
-- Auto-generated tokens
-- Security Context configuration (Pod and Container levels)
-- Container image pull secrets
-
-### 🔧 Operational Excellence
-- Configurable probes
-- Resource monitoring and limiting
-- Helm test integration
-- Standardized labels and metadata
-
-## Configuration
-
-### Global Configuration
-
-Define shared settings across all applications:
-
+### 1. Global Settings
+Define shared attributes across all services:
 ```yaml
 global:
   namespace: demo
   image:
     registry: docker.io
     repository: your-org
-    pullPolicy: Always
-  imagePullSecrets: []
 ```
 
-### Application Configuration
-
-Configure individual applications in the `apps` dictionary. **Note**: `app.name` and `app.tag` are strictly required and do not have global fallbacks.
+### 2. Application Definition
+Configure independent microservices using a dictionary-based structure for safe `helm upgrade --set` operations.
 
 ```yaml
 apps:
-  my-service:
-    name: my-app-name      # Required: Strictly used for naming and labeling
-    replicas: 1
+  myService:
+    name: my-app-name      # Required: Strict resource naming
+    replicas: 2
+    imageName: my-api
+    tag: v1.2.3            # Required: No global fallbacks
     
-    # Image Details
-    imageName: my-service-image
-    tag: v1.0.0            # Required: Strictly used for image tagging (no global default)
-    
+    # Resources & Auto-scaling
+    resources:
+      requests:
+        cpu: "100m"
+        memory: "128Mi"
+      limits:
+        cpu: "200m"
+        memory: "256Mi"
+    hpa:
+      enabled: true
+      minReplicas: 2
+      maxReplicas: 10
+      targetCPUUtilizationPercentage: 70
+
     # Networking
     ports:
       port: 80
       targetPort: 8080
-      nodePort: 30080      # Optional
-      grpcPort: 50051      # Optional
-      grpcTargetPort: 50051
-    
+
     # Probes
+    startupProbe:
+      httpGet:
+        path: /health
+        port: 80
     livenessProbe:
       httpGet:
         path: /health
         port: 80
-      initialDelaySeconds: 15
     readinessProbe:
       httpGet:
         path: /ready
         port: 80
-    
-    # Resources
-    resources:
-      enabled: true
-      requests:
-        memory: "128Mi"
-        cpu: "100m"
-      limits:
-        memory: "256Mi"
-        cpu: "200m"
-    
+
     # Security
     podSecurityContext:
       runAsUser: 1000
     securityContext:
       readOnlyRootFilesystem: true
-    
-    # Autoscaling (HPA)
-    hpa:
-      enabled: true
-      minReplicas: 2
-      maxReplicas: 5
-      targetCPUUtilizationPercentage: 80
-
-    # Service
-    service:
-      type: NodePort       # Optional: Defaults to "ClusterIP" if omitted
+      runAsNonRoot: true
 ```
 
-### Gateway Configuration
+---
 
-Configure ingress traffic using the Kubernetes **Gateway API**. For a deep dive into the architecture, setup, and verification of the Gateway implementation, see the dedicated [GATEWAY.md](GATEWAY.md) guide.
+## 🛠️ Operational Toolset
 
-```yaml
-gateway:
-  enabled: true
-  name: gateway
-  
-  # Advanced Proxy Settings (optional)
-  clientSettings:
-    enabled: true
-    name: gateway-client-settings
-    maxSize: "50"  # Maximum allowed request body size
-  
-  listeners:
-    - host: api.example.com
-      port: 443
-      protocol: HTTPS
-      tls: tls-secret-name
-      sslRedirect: true  # Automatically redirect HTTP to HTTPS
-      routes:
-        - path: /v1
-          pathType: PathPrefix
-          backendRefs:
-            - name: my-service
-              port: 80
-              weight: 100
-        - path: /grpc
-          pathType: PathPrefix
-          backendRefs:
-            - name: grpc-service
-              port: 50051
-              weight: 100
-```
+The chart includes automation scripts in the root `scripts/` folder to simplify management:
 
-### Blue-Green Deployments
+| Script | Function |
+| :--- | :--- |
+| `generate-kubeconfig.sh` | Generates a standalone Kubeconfig for any ServiceAccount. |
+| `setup-user.sh` | Automates Linux user creation and Kubeconfig provisioning. |
 
-The chart supports **Blue-Green & Canary** deployments using the Gateway API. This strategy creates two separate deployments (`-blue` and `-green`) and shifts traffic between them via weights.
+---
 
-- **Configuration**: Managed in `values.yaml` under each app's `blueGreen` section.
-- **Traffic Shifting**: Controlled via `gateway.listeners[].routes[].backendRefs[].weight`.
-- **NodePort Handling**: To avoid conflicts, when Blue-Green is enabled, the **blue** slot uses the static `nodePort` from `values.yaml`, while the **green** slot is **auto-assigned** a random port. When disabled, the base delivery uses the static ports.
-- **Robustness**: If Blue-Green is disabled, all resources (Deployments, Services, HPA, PDB) are created using the base `name`.
-- **Precedence**: In BG mode, the slot-specific `tag` is used; if missing, it falls back to the app-level `tag`.
-
-For detailed instructions and operational workflows, see [BLUE_GREEN.md](BLUE_GREEN.md).
-
-### RBAC Configuration
-
-Manage permissions and service accounts for both namespace and cluster levels using separate identity. This chart supports a dual-ServiceAccount strategy for enhanced security.
-
-For detailed documentation, architecture, and advanced configuration, see [RBAC.md](RBAC.md).
-
-```yaml
-rbac:
-  enabled: true
-  
-  namespace:
-    enabled: true
-    serviceAccountName: rbac-sa
-    roleName: my-role
-    rules:
-      - apiGroups: [""]
-        resources: ["pods"]
-        verbs: ["get", "list"]
-        
-  cluster:
-    enabled: true
-    serviceAccountName: rbac-cluster-sa
-    roleName: my-cluster-role
-    rules:
-      - apiGroups: [""]
-        resources: ["nodes"]
-        verbs: ["get", "list"]
-```
-
-## Deployment
+## 🚀 Getting Started
 
 ### Prerequisites
-- Kubernetes cluster (v1.24+) with Gateway API CRDs installed
-- Helm 3.x
-- `kubectl` configured
+*   **Helm 3.x** and **Kubectl** installed.
+*   Kubernetes cluster with **Gateway API CRDs** managed by a controller (e.g., NGINX).
 
-### Installation
-
-1. **Clone the repository:**
-   ```bash
-   git clone <repository-url>
-   cd helm-template
-   ```
-
-2. **Customize values:**
-   Use the provided environment files as templates:
-   - `appsphere/integration-values.yaml`
-   - `appsphere/qa-values.yaml`
-   - `appsphere/prod-values.yaml`
-
-3. **Deploy to Kubernetes:**
-
-   ```bash
-   # Deploy using default values
-   helm install my-release ./appsphere
-   
-   # Deploy/Upgrade using specific environment values
-   helm upgrade --install my-app ./appsphere -f appsphere/qa-values.yaml
-   ```
-
-## Validation & Testing
-
-### Helm Tests
-Run connection tests defined in the chart:
+### Deployment Workflow
 ```bash
-helm test my-app
+# 1. Install using a specific environment overlay
+helm upgrade --install my-release ./appsphere -f appsphere/values/qa-values.yaml
+
+# 2. Verify deployments
+kubectl get pods -n qa
+
+# 3. Run integrated connectivity tests
+helm test my-release -n qa
 ```
 
-### Verify Resources
-```bash
-# Check Gateway Status
-kubectl get gateway -n demo
+---
 
-# Check HTTP Routes
-kubectl get httproute -n demo
+## 💡 Best Practices & Recommendations
 
-# Check HPA
-kubectl get hpa -n demo
-```
+> [!IMPORTANT]
+> **Strict Naming**: Always define `app.name` and `app.tag` for every service. The chart relies on these for consistent labeling and image resolution.
 
-## Troubleshooting
+*   **Resources**: Always define `requests` for CPU to enable the HPA functionality.
+*   **BG Weights**: In Blue-Green mode, manage weights directly in `gateway.listeners[].routes[].backendRefs`.
+*   **Dictionary Logic**: Use `--set apps.myapp.tag=...` instead of index-based arrays to prevent configuration wipes.
 
-- **Resources Wiped After `helm upgrade`**: Ensure you are not using list indices (e.g., `apps[0]`) in your `--set` commands. Since `apps` is a dictionary, use the app name directly: `--set apps.my-service.tag=v1.0.0`.
-- **Gateway Not Ready**: Ensure Gateway API CRDs are installed on your cluster.
-- **Routes Not Matching**: Verify the `host` in `listeners` matches exactly. Ensure the `backendRefs[].name` matches the computed service name (e.g., `my-service`, `my-service-blue`).
-- **Pod Scheduling Failed**: Check resource quotas and `resources` requests in `values.yaml`.
+---
 
-## Best Practices
+## 🆘 Troubleshooting
 
-- **Tagging**: Avoid using `latest` tags in production.
-- **Resource Limits**: Always set `resources` for critical apps to ensure QoS.
-- **Probes**: Configure `readinessProbe` to prevent traffic to unready pods.
-- **Security**: Run containers as non-root users using `securityContext`.
+*   **Gateway Issues**: Run `kubectl describe gateway` to check for `Programmed: True`.
+*   **HPA Not Scaling**: Ensure the **Metrics Server** is reporting pods via `kubectl top pods`.
+*   **Image Pull Errors**: Verify `global.imagePullSecrets` if using a private registry.
+
+---
+© 2026 AppSphere Ops Team. Powered by Kubernetes Gateway API.
