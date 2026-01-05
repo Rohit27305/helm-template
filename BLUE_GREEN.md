@@ -22,7 +22,7 @@ apps:
   demo:
     name: demo
     imageName: test-app
-    tag: v1.0.0            # Fallback tag
+    tag: v1.0.0            # Default tag
 
     blueGreen:
       enabled: true
@@ -42,6 +42,7 @@ apps:
     *   🟢 **Green**: Named with a suffix (`demo-green`) for side-by-side testing.
 2.  **Dedicated Services**: Both slots receive unique internal services for direct testing.
 3.  **Gateway API Integration**: The `HTTPRoute` leverages `backendRefs` with weights to split incoming traffic.
+4.  **Conditional Rendering**: The chart automatically skips "green" backends in the `HTTPRoute` if Blue-Green is disabled for that specific app.
 
 ---
 
@@ -50,7 +51,9 @@ apps:
 ### 1. Deploy to Inactive Slot
 Deploy the new version to Green while Blue serves 100% of traffic.
 ```bash
-helm upgrade my-release ./appsphere --set apps.demo.blueGreen.green.tag=v2.0.0
+helm upgrade my-release ./appsphere \
+  --set apps.demo.blueGreen.enabled=true \
+  --set apps.demo.blueGreen.green.tag=v2.0.0
 ```
 
 ### 2. Gradual Canary Rollout
@@ -58,16 +61,22 @@ Shift 10% of users to the new version to monitor stability.
 ```bash
 # Set weights: Blue=90, Green=10
 helm upgrade my-release ./appsphere \
-  --set gateway.listeners[0].routes[0].backendRefs[0].weight=90 \
-  --set gateway.listeners[0].routes[0].backendRefs[1].weight=10
+  --set apps.demo.blueGreen.enabled=true \
+  --set gateway.listeners.demo.routes.http.backendRefs.primary.weight=90 \
+  --set gateway.listeners.demo.routes.http.backendRefs.green.weight=10 \
+  --set gateway.listeners.demo.routes.grpc.backendRefs.primary.weight=90 \
+  --set gateway.listeners.demo.routes.grpc.backendRefs.green.weight=10
 ```
 
 ### 3. Full Cutover
 Switch 100% of traffic to Green.
 ```bash
 helm upgrade my-release ./appsphere \
-  --set gateway.listeners[0].routes[0].backendRefs[0].weight=0 \
-  --set gateway.listeners[0].routes[0].backendRefs[1].weight=100
+  --set apps.demo.blueGreen.enabled=true \
+  --set gateway.listeners.demo.routes.http.backendRefs.primary.weight=0 \
+  --set gateway.listeners.demo.routes.http.backendRefs.green.weight=100 \
+  --set gateway.listeners.demo.routes.grpc.backendRefs.primary.weight=0 \
+  --set gateway.listeners.demo.routes.grpc.backendRefs.green.weight=100
 ```
 
 ---

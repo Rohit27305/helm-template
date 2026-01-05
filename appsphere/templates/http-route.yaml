@@ -6,50 +6,53 @@ metadata:
   namespace: {{ $.Values.global.namespace }}
 spec:
   parentRefs:
-{{- range .Values.gateway.listeners }}
-    {{- if .tls }}
+{{- range $listenerName, $listener := .Values.gateway.listeners }}
+    {{- if $listener.tls }}
     # Bind to HTTPS listener
     - name: {{ $.Values.gateway.name }}
-      sectionName: {{ .host | replace "." "-" }}-https
-    {{- if not .sslRedirect }}
+      sectionName: {{ $listener.host | replace "." "-" }}-https
+    {{- if not $listener.sslRedirect }}
     # Bind to HTTP listener (Redirect disabled)
     - name: {{ $.Values.gateway.name }}
-      sectionName: {{ .host | replace "." "-" }}-http
+      sectionName: {{ $listener.host | replace "." "-" }}-http
     {{- end }}
     {{- else }}
     # Bind to HTTP listener
     - name: {{ $.Values.gateway.name }}
-      sectionName: {{ .host | replace "." "-" }}-http
+      sectionName: {{ $listener.host | replace "." "-" }}-http
     {{- end }}
 {{- end }}
   hostnames:
-{{- range .Values.gateway.listeners }}
-    - {{ .host | quote }}
+{{- range $listenerName, $listener := .Values.gateway.listeners }}
+    - {{ $listener.host | quote }}
 {{- end }}
 
   rules:
-{{- range .Values.gateway.listeners }}
-{{- $host := .host }}
+{{- range $listenerName, $listener := .Values.gateway.listeners }}
+{{- $host := $listener.host }}
 
-{{- range .routes }}
+{{- range $routeName, $route := $listener.routes }}
     - matches:
         - headers:
             - name: Host
               value: {{ $host | quote }}
           path:
-            type: {{ .pathType }}
-            value: {{ .path | quote }}
+            type: {{ $route.pathType | default "PathPrefix" }}
+            value: {{ $route.path | default "/" | quote }}
       backendRefs:
-        {{- range .backendRefs }}
-        - name: {{ .name }}
-          port: {{ .port }}
-          {{- if .weight }}
-          weight: {{ .weight }}
+        {{- range $backendName, $backend := $route.backendRefs }}
+        {{- $app := index $.Values.apps (trimSuffix "-green" $backend.name) }}
+        {{- if or (not (hasSuffix "-green" $backend.name)) (and $app $app.blueGreen $app.blueGreen.enabled) }}
+        - name: {{ $backend.name }}
+          port: {{ $backend.port }}
+          {{- if not (kindIs "invalid" $backend.weight) }}
+          weight: {{ $backend.weight }}
           {{- end }}
         {{- end }}
-      {{- if .filters }}
+        {{- end }}
+      {{- if $route.filters }}
       filters:
-        {{- toYaml .filters | nindent 8 }}
+        {{- toYaml $route.filters | nindent 8 }}
       {{- end }}
 {{- end }}
 
