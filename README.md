@@ -18,6 +18,7 @@ Click on the links below to access detailed guides for specific features:
 | 🔄 [**Blue-Green/Canary**](BLUE_GREEN.md) | Zero-downtime deployment strategies and traffic shifting. |
 | 🔒 [**RBAC Strategy**](RBAC.md) | Granular permission management with dual-ServiceAccounts. |
 | 📈 [**Autoscaling (HPA)**](HPA.md) | Dynamic scaling requirements and Metrics Server setup. |
+| 📜 [**Chart Rules**](CHART_RULES.md) | Mandatory technical requirements and Golden Rules. |
 
 ---
 

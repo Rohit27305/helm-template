@@ -51,7 +51,9 @@ apps:
 ### 1. Deploy to Inactive Slot
 Deploy the new version to Green while Blue serves 100% of traffic.
 ```bash
-helm upgrade my-release ./appsphere --set apps.demo.blueGreen.green.tag=v2.0.0
+helm upgrade my-release ./appsphere \
+  --set apps.demo.blueGreen.enabled=true \
+  --set apps.demo.blueGreen.green.tag=v2.0.0
 ```
 
 ### 2. Gradual Canary Rollout
@@ -59,16 +61,22 @@ Shift 10% of users to the new version to monitor stability.
 ```bash
 # Set weights: Blue=90, Green=10
 helm upgrade my-release ./appsphere \
+  --set apps.demo.blueGreen.enabled=true \
   --set gateway.listeners.demo.routes.http.backendRefs.primary.weight=90 \
-  --set gateway.listeners.demo.routes.http.backendRefs.green.weight=10
+  --set gateway.listeners.demo.routes.http.backendRefs.green.weight=10 \
+  --set gateway.listeners.demo.routes.grpc.backendRefs.primary.weight=90 \
+  --set gateway.listeners.demo.routes.grpc.backendRefs.green.weight=10
 ```
 
 ### 3. Full Cutover
 Switch 100% of traffic to Green.
 ```bash
 helm upgrade my-release ./appsphere \
+  --set apps.demo.blueGreen.enabled=true \
   --set gateway.listeners.demo.routes.http.backendRefs.primary.weight=0 \
-  --set gateway.listeners.demo.routes.http.backendRefs.green.weight=100
+  --set gateway.listeners.demo.routes.http.backendRefs.green.weight=100 \
+  --set gateway.listeners.demo.routes.grpc.backendRefs.primary.weight=0 \
+  --set gateway.listeners.demo.routes.grpc.backendRefs.green.weight=100
 ```
 
 ---
