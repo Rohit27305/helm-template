@@ -9,6 +9,9 @@ This document outlines the strict technical requirements and operational "Golden
 To correctly utilize the Blue-Green or Canary deployment strategy:
 
 *   **Activation**: `apps.<app-name>.blueGreen.enabled` **must** be set to `true`. If disabled, only the "blue" (stable) version will be rendered.
+    
+    > [!IMPORTANT]
+    > **Mandatory Flag**: You **must** ensure the `enabled: true` flag is set (either in `values.yaml` or via `--set apps.<app-name>.blueGreen.enabled=true`) whenever using Blue-Green or Canary deployments. Without this flag, the "green" slot and traffic weighting will be ignored.
 *   **Tag Management**: 
     *   Always define specific tags under `blueGreen.blue.tag` and `blueGreen.green.tag`.
     *   The top-level `apps.<app-name>.tag` is only used as a fallback when Blue-Green is disabled.
