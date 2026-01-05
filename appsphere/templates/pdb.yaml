@@ -1,16 +1,11 @@
-{{- range $appName, $appValues := .Values.apps }}
-{{- if and $appValues.name $appValues.pdb $appValues.pdb.enabled }}
-{{- $app := $appValues }}
+{{- range $appName, $app := .Values.apps }}
+{{- if and $app.name $app.pdb $app.pdb.enabled }}
 {{- $slots := list "" }}
 {{- if and $app.blueGreen $app.blueGreen.enabled }}
   {{- $slots = list "blue" "green" }}
 {{- end }}
-
 {{- range $slot := $slots }}
-{{- $name := $app.name }}
-{{- if eq $slot "green" }}
-  {{- $name = printf "%s-green" $app.name }}
-{{- end }}
+{{- $name := $app.name }}{{ if eq $slot "green" }}{{ $name = printf "%s-green" $app.name }}{{ end }}
 ---
 apiVersion: policy/v1
 kind: PodDisruptionBudget

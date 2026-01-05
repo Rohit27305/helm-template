@@ -99,17 +99,20 @@ Routes are defined directly under their respective listeners for centralized man
 ```yaml
 gateway:
   listeners:
-    - host: api.example.com
+    primary:                 # Map key used for deep merges
+      host: api.example.com
       port: 443
       protocol: HTTPS
       tls: tls-secret-name
       sslRedirect: true      # Enables HTTP -> HTTPS redirection
       
       routes:
-        - path: /v1
+        web:                 # Map key for routes
+          path: /v1
           pathType: PathPrefix
           backendRefs:
-            - name: my-service
+            primary:         # Map key for backendRefs
+              name: my-service
               port: 80
               weight: 100
 ```

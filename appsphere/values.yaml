@@ -19,7 +19,7 @@ apps:
 
     # Blue Green
     blueGreen:
-      enabled: true
+      enabled: false
       blue:
         tag: blue
       green:
@@ -57,26 +57,33 @@ gateway:
     maxSize: "50"
 
   listeners:
-    - host: test-bg.makunaiglobal.ai
+    demo:
+      host: test-bg.makunaiglobal.ai
       tls: tls-secret
       sslRedirect: true
       routes:
-        - path: /grpc
+        grpc:
+          path: /grpc
           pathType: PathPrefix
           backendRefs:
-            - name: demo
+            primary:
+              name: demo
               port: 50051
               weight: 100
-            - name: demo-green
+            green:
+              name: demo-green
               port: 50051
               weight: 0
-        - path: /
+        http:
+          path: /
           pathType: PathPrefix
           backendRefs:
-            - name: demo
+            primary:
+              name: demo
               port: 80
               weight: 100
-            - name: demo-green
+            green:
+              name: demo-green
               port: 80
               weight: 0
 

@@ -1,7 +1,7 @@
 {{- if  and .Values.gateway .Values.gateway.enabled }}
 {{- $anyRedirect := false }}
-{{- range .Values.gateway.listeners }}
-  {{- if and .tls .sslRedirect }}
+{{- range $listenerName, $listener := .Values.gateway.listeners }}
+  {{- if and $listener.tls $listener.sslRedirect }}
     {{- $anyRedirect = true }}
   {{- end }}
 {{- end }}
@@ -14,16 +14,16 @@ metadata:
   namespace: {{ $.Values.global.namespace }}
 spec:
   parentRefs:
-{{- range .Values.gateway.listeners }}
-  {{- if and .tls .sslRedirect }}
+{{- range $listenerName, $listener := .Values.gateway.listeners }}
+  {{- if and $listener.tls $listener.sslRedirect }}
     - name: {{ $.Values.gateway.name }}
-      sectionName: {{ .host | replace "." "-" }}-http
+      sectionName: {{ $listener.host | replace "." "-" }}-http
   {{- end }}
 {{- end }}
   hostnames:
-{{- range .Values.gateway.listeners }}
-  {{- if and .tls .sslRedirect }}
-    - {{ .host | quote }}
+{{- range $listenerName, $listener := .Values.gateway.listeners }}
+  {{- if and $listener.tls $listener.sslRedirect }}
+    - {{ $listener.host | quote }}
   {{- end }}
 {{- end }}
   rules:

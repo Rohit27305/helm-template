@@ -173,7 +173,7 @@ helm test my-release -n qa
 
 *   **Resources**: Always define `requests` for CPU to enable the HPA functionality.
 *   **BG Weights**: In Blue-Green mode, manage weights directly in the `gateway` section. Note that the **Blue** slot shares the base `app.name` to ensure NodePort stability and prevent allocation conflicts.
-*   **Dictionary Logic**: Use `--set apps.myapp.tag=...` instead of index-based arrays to prevent configuration wipes.
+*   **Map-Based Logic**: Use map keys (e.g., `--set gateway.listeners.primary.routes.http...`) instead of index-based arrays to prevent configuration wipes and enable deep merging.
 
 ---
 

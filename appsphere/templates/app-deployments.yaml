@@ -1,20 +1,12 @@
-{{- range $appName, $appValues := .Values.apps }}
-{{- if $appValues.name }}
-{{- $app := $appValues }}
+{{- range $appName, $app := .Values.apps }}
+{{- if $app.name }}
 {{- $slots := list "" }}
 {{- if and $app.blueGreen $app.blueGreen.enabled }}
   {{- $slots = list "blue" "green" }}
 {{- end }}
-
 {{- range $slot := $slots }}
-{{- $name := $app.name }}
-{{- $tag := $app.tag }}
-{{- if eq $slot "green" }}
-  {{- $name = printf "%s-green" $app.name }}
-  {{- $tag = index $app.blueGreen "green" "tag" | default $app.tag }}
-{{- else if eq $slot "blue" }}
-  {{- $tag = index $app.blueGreen "blue" "tag" | default $app.tag }}
-{{- end }}
+{{- $name := $app.name }}{{ if eq $slot "green" }}{{ $name = printf "%s-green" $app.name }}{{ end }}
+{{- $tag := $app.tag }}{{ if and $slot (index $app.blueGreen $slot "tag") }}{{ $tag = index $app.blueGreen $slot "tag" }}{{ end }}
 ---
 apiVersion: apps/v1
 kind: Deployment
