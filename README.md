@@ -1,5 +1,9 @@
 # 🚀 AppSphere: Enterprise Multi-Application Helm Chart
 
+<p align="center">
+  <img src="IMAGE.png" alt="AppSphere Overview">
+</p>
+
 [![Helm Version](https://img.shields.io/badge/helm-v3.x-blue.svg)](https://helm.sh/)
 [![Kubernetes Version](https://img.shields.io/badge/kubernetes-v1.24+-green.svg)](https://kubernetes.io/)
 [![Gateway API](https://img.shields.io/badge/Networking-Gateway%20API-orange.svg)](https://gateway-api.sigs.k8s.io/)
@@ -185,4 +189,5 @@ helm test my-release -n qa
 *   **Image Pull Errors**: Verify `global.imagePullSecrets` if using a private registry.
 
 ---
-© 2026 AppSphere Ops Team. Powered by Kubernetes Gateway API.
+
+<br><i> © 2026 Rohit Verma | Seamlessly scaling the future of cloud-native infrastructure.</i>
