@@ -5,7 +5,7 @@
 </p>
 
 [![Helm Version](https://img.shields.io/badge/helm-v3.x-blue.svg)](https://helm.sh/)
-[![Kubernetes Version](https://img.shields.io/badge/kubernetes-v1.24+-green.svg)](https://kubernetes.io/)
+[![Kubernetes Version](https://img.shields.io/badge/kubernetes-v1.24%2B-green.svg)](https://kubernetes.io/)
 [![Gateway API](https://img.shields.io/badge/Networking-Gateway%20API-orange.svg)](https://gateway-api.sigs.k8s.io/)
 
 A professional-grade Helm chart designed for deploying and managing complex microservices architectures across diverse environments with consistency, security, and high availability.
@@ -19,8 +19,8 @@ Click on the links below to access detailed guides for specific features:
 | Guide | Description |
 | :--- | :--- |
 | 🌐 [**Gateway Guide**](GATEWAY.md) | Architecture and setup for modern Gateway API networking. |
-| 🔄 [**Blue-Green/Canary**](BLUE_GREEN.md) | Zero-downtime deployment strategies and traffic shifting. |
-| 🔒 [**RBAC Strategy**](RBAC.md) | Granular permission management with dual-ServiceAccounts. |
+| 🔄 [**Blue-Green/Canary**](BLUE_GREEN.md) | Zero‑downtime deployment strategies and traffic shifting. |
+| 🔒 [**RBAC Strategy**](RBAC.md) | Granular permission management with dual‑ServiceAccounts. |
 | 📈 [**Autoscaling (HPA)**](HPA.md) | Dynamic scaling requirements and Metrics Server setup. |
 | 📜 [**Chart Rules**](CHART_RULES.md) | Mandatory technical requirements and Golden Rules. |
 
@@ -58,19 +58,19 @@ Click on the links below to access detailed guides for specific features:
 ## ✨ Core Features
 
 ### 🌍 Networking & Traffic Management
-*   **Gateway API First**: Built-in support for the standard Gateway API (NGINX/Istio ready).
-*   **Intelligent Routing**: Path-based matching, header manipulation, and weighted traffic.
-*   **HTTPS Always**: Automatic SSL/TLS termination and HTTP-to-HTTPS redirection.
+* **Gateway API First**: Built‑in support for the standard Gateway API (NGINX/Istio ready).
+* **Intelligent Routing**: Path‑based matching, header manipulation, and weighted traffic.
+* **HTTPS Always**: Automatic SSL/TLS termination and HTTP‑to‑HTTPS redirection.
 
 ### 🛡️ Enterprise Security
-*   **Dual-SA RBAC**: Separate identities for Namespace and Cluster-level permissions.
-*   **Hardened Pods**: Configurable Pod/Container SecurityContexts for least privilege.
-*   **Secret Management**: Native support for image pull secrets and token generation.
+* **Dual‑SA RBAC**: Separate identities for Namespace and Cluster‑level permissions.
+* **Hardened Pods**: Configurable Pod/Container SecurityContexts for least privilege.
+* **Secret Management**: Native support for image pull secrets and token generation.
 
-### � Scalability & Robustness
-*   **HPA Integration**: Automated scaling based on CPU utilization (Metrics Server required).
-*   **Blue-Green Native**: Native support for zero-downtime rollouts via `blue` and `green` slots.
-*   **High Availability**: Pod Disruption Budgets (PDB) ensure availability during maintenance.
+### 🚀 Scalability & Robustness
+* **HPA Integration**: Automated scaling based on CPU utilization (Metrics Server required).
+* **Blue‑Green Native**: Native support for zero‑downtime rollouts via `blue` and `green` slots.
+* **High Availability**: Pod Disruption Budgets (PDB) ensure availability during maintenance.
 
 ---
 
@@ -87,7 +87,7 @@ global:
 ```
 
 ### 2. Application Definition
-Configure independent microservices using a dictionary-based structure for safe `helm upgrade --set` operations.
+Configure independent microservices using a dictionary‑based structure for safe `helm upgrade --set` operations.
 
 ```yaml
 apps:
@@ -97,7 +97,7 @@ apps:
     imageName: my-api
     tag: v1.2.3            # Required: No global fallbacks
     
-    # Resources & Auto-scaling
+    # Resources & Auto‑scaling
     resources:
       requests:
         cpu: "100m"
@@ -154,8 +154,8 @@ The chart includes automation scripts in the root `scripts/` folder to simplify 
 ## 🚀 Getting Started
 
 ### Prerequisites
-*   **Helm 3.x** and **Kubectl** installed.
-*   Kubernetes cluster with **Gateway API CRDs** managed by a controller (e.g., NGINX).
+* **Helm 3.x** and **Kubectl** installed.
+* Kubernetes cluster with **Gateway API CRDs** managed by a controller (e.g., NGINX).
 
 ### Deployment Workflow
 ```bash
@@ -176,18 +176,18 @@ helm test my-release -n qa
 > [!IMPORTANT]
 > **Strict Naming**: Always define `app.name` and `app.tag` for every service. The chart relies on these for consistent labeling and image resolution.
 
-*   **Resources**: Always define `requests` for CPU to enable the HPA functionality.
-*   **BG Weights**: In Blue-Green mode, manage weights directly in the `gateway` section. Note that the **Blue** slot shares the base `app.name` to ensure NodePort stability and prevent allocation conflicts.
-*   **Map-Based Logic**: Use map keys (e.g., `--set gateway.listeners.primary.routes.http...`) instead of index-based arrays to prevent configuration wipes and enable deep merging.
+* **Resources**: Always define `requests` for CPU to enable the HPA functionality.
+* **BG Weights**: In Blue‑Green mode, manage weights directly in the `gateway` section. Note that the **Blue** slot shares the base `app.name` to ensure NodePort stability and prevent allocation conflicts.
+* **Map‑Based Logic**: Use map keys (e.g., `--set gateway.listeners.primary.routes.http...`) instead of index‑based arrays to prevent configuration wipes and enable deep merging.
 
 ---
 
 ## 🆘 Troubleshooting
 
-*   **Gateway Issues**: Run `kubectl describe gateway` to check for `Programmed: True`.
-*   **HPA Not Scaling**: Ensure the **Metrics Server** is reporting pods via `kubectl top pods`.
-*   **Image Pull Errors**: Verify `global.imagePullSecrets` if using a private registry.
+* **Gateway Issues**: Run `kubectl describe gateway` to check for `Programmed: True`.
+* **HPA Not Scaling**: Ensure the **Metrics Server** is reporting pods via `kubectl top pods`.
+* **Image Pull Errors**: Verify `global.imagePullSecrets` if using a private registry.
 
 ---
 
-<br><i> © 2026 Rohit Verma | Seamlessly scaling the future of cloud-native infrastructure.</i>
+<br><i> © 2026 Rohit Verma | Seamlessly scaling the future of cloud‑native infrastructure.</i>
