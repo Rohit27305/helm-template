@@ -8,6 +8,8 @@
 [![Kubernetes Version](https://img.shields.io/badge/kubernetes-v1.24+-green.svg)](https://kubernetes.io/)
 [![Gateway API](https://img.shields.io/badge/Networking-Gateway%20API-orange.svg)](https://gateway-api.sigs.k8s.io/)
 
+*Documentation last synchronized on **2026-02-22** (manual sync initiated)*
+
 A professional-grade Helm chart designed for deploying and managing complex microservices architectures across diverse environments with consistency, security, and high availability.
 
 ---
@@ -67,7 +69,7 @@ Click on the links below to access detailed guides for specific features:
 *   **Hardened Pods**: Configurable Pod/Container SecurityContexts for least privilege.
 *   **Secret Management**: Native support for image pull secrets and token generation.
 
-### � Scalability & Robustness
+### 📈 Scalability & Robustness
 *   **HPA Integration**: Automated scaling based on CPU utilization (Metrics Server required).
 *   **Blue-Green Native**: Native support for zero-downtime rollouts via `blue` and `green` slots.
 *   **High Availability**: Pod Disruption Budgets (PDB) ensure availability during maintenance.
